@@ -1,0 +1,27 @@
+services:
+  web:
+    build: .
+    command: node server.js
+    env_file:
+      - .env.local
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  discord-bot:
+    build: .
+    command: pnpm bot:discord
+    env_file:
+      - .env.local
+    restart: unless-stopped
+    depends_on:
+      - web
+
+  youtube-bot:
+    build: .
+    command: pnpm bot:youtube
+    env_file:
+      - .env.local
+    restart: unless-stopped
+    depends_on:
+      - web
