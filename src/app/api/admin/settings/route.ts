@@ -1,5 +1,6 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { getAdminSettings, updateAdminSettings } from "@/lib/admin-state";
+import { getAdminSettings, updateAdminSettings, verifyAdminPassword } from "@/lib/admin-state";
 import type { AdminActionDraft } from "@/lib/work-room";
 
 export const dynamic = "force-dynamic";
@@ -15,19 +16,28 @@ export async function POST(request: Request) {
       cameraIntervalSeconds?: 5 | 7 | 10 | 15 | 30;
       globalAnnouncement?: string;
       pomodoroRunning?: boolean;
+      prioritizePopularRooms?: boolean;
       disabledRooms?: string[];
       action?: AdminActionDraft;
     };
+    const cookieStore = await cookies();
+    const isAdmin = cookieStore.get("kiitos_admin")?.value === "1";
+
+    if (!isAdmin && !verifyAdminPassword(body.password ?? "")) {
+      return NextResponse.json({ error: "Invalid admin password" }, { status: 401 });
+    }
 
     const settings = updateAdminSettings(
-      body.password ?? "",
+      process.env.ADMIN_PASSWORD ?? body.password ?? "",
       {
         cameraIntervalSeconds: body.cameraIntervalSeconds,
         globalAnnouncement: body.globalAnnouncement,
         pomodoroRunning: body.pomodoroRunning,
+        prioritizePopularRooms: body.prioritizePopularRooms,
         disabledRooms: body.disabledRooms
       },
-      body.action
+      body.action,
+      isAdmin
     );
 
     return NextResponse.json(settings);

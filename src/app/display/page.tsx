@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatDuration } from "@/lib/time";
 import type { DisplayParticipant, DisplayRoom } from "@/lib/types";
 import { getRoomConfig } from "@/lib/room-config";
+import { getRotatingWeather } from "@/lib/weather";
 import { useDisplayState } from "./use-display-state";
 
 const POMODORO_WORK_SECONDS = 25 * 60;
@@ -16,6 +17,7 @@ export default function DisplayPage() {
   const [, setTick] = useState(0);
   const now = new Date();
   const pomodoro = getPomodoroState(now);
+  const weather = getRotatingWeather(now);
   const totalFocusSeconds = useMemo(
     () =>
       state.rooms.reduce(
@@ -102,9 +104,9 @@ export default function DisplayPage() {
             />
             <CafeCard
               title="Weather"
-              label="天気"
-              value={process.env.NEXT_PUBLIC_DISPLAY_WEATHER ?? "Tokyo · Light Rain"}
-              sub="窓辺に雨、作業灯は暖色"
+              label="日本の天気"
+              value={`${weather.area} · ${weather.condition}`}
+              sub={`${weather.temperature} / ${weather.note}`}
             />
             <div className="glass-panel wood-panel relative overflow-hidden rounded-[2rem] p-6">
               <div className="relative z-10">

@@ -1,0 +1,716 @@
+{
+  "cafe": [
+    {
+      "seat_id": "A1",
+      "x": 21,
+      "y": 31,
+      "width": 6,
+      "height": 9,
+      "seat_name": "窓側テーブル"
+    },
+    {
+      "seat_id": "A2",
+      "x": 23,
+      "y": 53,
+      "width": 6,
+      "height": 9,
+      "seat_name": "窓側テーブル"
+    },
+    {
+      "seat_id": "A3",
+      "x": 22,
+      "y": 72,
+      "width": 6,
+      "height": 9,
+      "seat_name": "窓側テーブル"
+    },
+    {
+      "seat_id": "B1",
+      "x": 38,
+      "y": 45,
+      "width": 6,
+      "height": 8,
+      "seat_name": "中央テーブル"
+    },
+    {
+      "seat_id": "B2",
+      "x": 46,
+      "y": 38,
+      "width": 6,
+      "height": 8,
+      "seat_name": "中央テーブル"
+    },
+    {
+      "seat_id": "B3",
+      "x": 52,
+      "y": 39,
+      "width": 6,
+      "height": 8,
+      "seat_name": "中央テーブル"
+    },
+    {
+      "seat_id": "B4",
+      "x": 59,
+      "y": 39,
+      "width": 6,
+      "height": 8,
+      "seat_name": "中央テーブル"
+    },
+    {
+      "seat_id": "B5",
+      "x": 65,
+      "y": 45,
+      "width": 6,
+      "height": 8,
+      "seat_name": "中央テーブル"
+    },
+    {
+      "seat_id": "C1",
+      "x": 30,
+      "y": 86,
+      "width": 6,
+      "height": 8,
+      "seat_name": "カウンター席"
+    },
+    {
+      "seat_id": "C2",
+      "x": 41,
+      "y": 86,
+      "width": 6,
+      "height": 8,
+      "seat_name": "カウンター席"
+    },
+    {
+      "seat_id": "C3",
+      "x": 50,
+      "y": 86,
+      "width": 6,
+      "height": 8,
+      "seat_name": "カウンター席"
+    },
+    {
+      "seat_id": "C4",
+      "x": 60,
+      "y": 86,
+      "width": 6,
+      "height": 8,
+      "seat_name": "カウンター席"
+    },
+    {
+      "seat_id": "C5",
+      "x": 70,
+      "y": 86,
+      "width": 6,
+      "height": 8,
+      "seat_name": "カウンター席"
+    },
+    {
+      "seat_id": "D1",
+      "x": 81,
+      "y": 35,
+      "width": 6,
+      "height": 9,
+      "seat_name": "ソファ横テーブル"
+    },
+    {
+      "seat_id": "D2",
+      "x": 82,
+      "y": 56,
+      "width": 6,
+      "height": 9,
+      "seat_name": "ソファ横テーブル"
+    }
+  ],
+  "library": [
+    {
+      "seat_id": "A1",
+      "x": 10,
+      "y": 23,
+      "width": 5,
+      "height": 8,
+      "seat_name": "窓側静音席"
+    },
+    {
+      "seat_id": "A2",
+      "x": 10,
+      "y": 33,
+      "width": 5,
+      "height": 8,
+      "seat_name": "窓側静音席"
+    },
+    {
+      "seat_id": "A3",
+      "x": 10,
+      "y": 46,
+      "width": 5,
+      "height": 8,
+      "seat_name": "窓側静音席"
+    },
+    {
+      "seat_id": "A4",
+      "x": 10,
+      "y": 58,
+      "width": 5,
+      "height": 8,
+      "seat_name": "窓側静音席"
+    },
+    {
+      "seat_id": "B1",
+      "x": 34,
+      "y": 18,
+      "width": 6,
+      "height": 8,
+      "seat_name": "上段読書机"
+    },
+    {
+      "seat_id": "B2",
+      "x": 41,
+      "y": 18,
+      "width": 6,
+      "height": 8,
+      "seat_name": "上段読書机"
+    },
+    {
+      "seat_id": "B3",
+      "x": 49,
+      "y": 18,
+      "width": 6,
+      "height": 8,
+      "seat_name": "上段読書机"
+    },
+    {
+      "seat_id": "B4",
+      "x": 56,
+      "y": 18,
+      "width": 6,
+      "height": 8,
+      "seat_name": "上段読書机"
+    },
+    {
+      "seat_id": "B5",
+      "x": 63,
+      "y": 18,
+      "width": 6,
+      "height": 8,
+      "seat_name": "上段読書机"
+    },
+    {
+      "seat_id": "C1",
+      "x": 38,
+      "y": 45,
+      "width": 6,
+      "height": 8,
+      "seat_name": "中央集中席"
+    },
+    {
+      "seat_id": "C2",
+      "x": 46,
+      "y": 45,
+      "width": 6,
+      "height": 8,
+      "seat_name": "中央集中席"
+    },
+    {
+      "seat_id": "C3",
+      "x": 54,
+      "y": 45,
+      "width": 6,
+      "height": 8,
+      "seat_name": "中央集中席"
+    },
+    {
+      "seat_id": "C4",
+      "x": 62,
+      "y": 45,
+      "width": 6,
+      "height": 8,
+      "seat_name": "中央集中席"
+    },
+    {
+      "seat_id": "D1",
+      "x": 39,
+      "y": 72,
+      "width": 6,
+      "height": 8,
+      "seat_name": "下段読書机"
+    },
+    {
+      "seat_id": "D2",
+      "x": 47,
+      "y": 72,
+      "width": 6,
+      "height": 8,
+      "seat_name": "下段読書机"
+    },
+    {
+      "seat_id": "D3",
+      "x": 55,
+      "y": 72,
+      "width": 6,
+      "height": 8,
+      "seat_name": "下段読書机"
+    },
+    {
+      "seat_id": "D4",
+      "x": 63,
+      "y": 72,
+      "width": 6,
+      "height": 8,
+      "seat_name": "下段読書机"
+    },
+    {
+      "seat_id": "E1",
+      "x": 85,
+      "y": 49,
+      "width": 6,
+      "height": 8,
+      "seat_name": "本棚横個室席"
+    }
+  ],
+  "office": [
+    {
+      "seat_id": "A1",
+      "x": 15,
+      "y": 39,
+      "width": 7,
+      "height": 9,
+      "seat_name": "窓側デスク"
+    },
+    {
+      "seat_id": "A2",
+      "x": 15,
+      "y": 54,
+      "width": 7,
+      "height": 9,
+      "seat_name": "窓側デスク"
+    },
+    {
+      "seat_id": "A3",
+      "x": 15,
+      "y": 68,
+      "width": 7,
+      "height": 9,
+      "seat_name": "窓側デスク"
+    },
+    {
+      "seat_id": "B1",
+      "x": 36,
+      "y": 45,
+      "width": 7,
+      "height": 8,
+      "seat_name": "中央ワークデスク"
+    },
+    {
+      "seat_id": "B2",
+      "x": 54,
+      "y": 45,
+      "width": 7,
+      "height": 8,
+      "seat_name": "中央ワークデスク"
+    },
+    {
+      "seat_id": "B3",
+      "x": 35,
+      "y": 64,
+      "width": 7,
+      "height": 8,
+      "seat_name": "中央ワークデスク"
+    },
+    {
+      "seat_id": "B4",
+      "x": 54,
+      "y": 64,
+      "width": 7,
+      "height": 8,
+      "seat_name": "中央ワークデスク"
+    },
+    {
+      "seat_id": "C1",
+      "x": 22,
+      "y": 21,
+      "width": 7,
+      "height": 8,
+      "seat_name": "上段集中デスク"
+    },
+    {
+      "seat_id": "C2",
+      "x": 32,
+      "y": 21,
+      "width": 7,
+      "height": 8,
+      "seat_name": "上段集中デスク"
+    },
+    {
+      "seat_id": "C3",
+      "x": 42,
+      "y": 21,
+      "width": 7,
+      "height": 8,
+      "seat_name": "上段集中デスク"
+    },
+    {
+      "seat_id": "C4",
+      "x": 51,
+      "y": 21,
+      "width": 7,
+      "height": 8,
+      "seat_name": "上段集中デスク"
+    },
+    {
+      "seat_id": "C5",
+      "x": 61,
+      "y": 21,
+      "width": 7,
+      "height": 8,
+      "seat_name": "上段集中デスク"
+    },
+    {
+      "seat_id": "W1",
+      "x": 26,
+      "y": 84,
+      "width": 7,
+      "height": 8,
+      "seat_name": "窓際ブース"
+    },
+    {
+      "seat_id": "W2",
+      "x": 36,
+      "y": 84,
+      "width": 7,
+      "height": 8,
+      "seat_name": "窓際ブース"
+    },
+    {
+      "seat_id": "W3",
+      "x": 45,
+      "y": 84,
+      "width": 7,
+      "height": 8,
+      "seat_name": "窓際ブース"
+    },
+    {
+      "seat_id": "W4",
+      "x": 55,
+      "y": 84,
+      "width": 7,
+      "height": 8,
+      "seat_name": "窓際ブース"
+    },
+    {
+      "seat_id": "W5",
+      "x": 64,
+      "y": 84,
+      "width": 7,
+      "height": 8,
+      "seat_name": "窓際ブース"
+    },
+    {
+      "seat_id": "L1",
+      "x": 84,
+      "y": 24,
+      "width": 7,
+      "height": 9,
+      "seat_name": "ラウンジ側デスク"
+    },
+    {
+      "seat_id": "L2",
+      "x": 84,
+      "y": 43,
+      "width": 7,
+      "height": 9,
+      "seat_name": "ラウンジ側デスク"
+    },
+    {
+      "seat_id": "L3",
+      "x": 84,
+      "y": 62,
+      "width": 7,
+      "height": 9,
+      "seat_name": "ラウンジ側デスク"
+    }
+  ],
+  "creator": [
+    {
+      "seat_id": "A1",
+      "x": 13,
+      "y": 40,
+      "width": 7,
+      "height": 9,
+      "seat_name": "左側制作デスク"
+    },
+    {
+      "seat_id": "A2",
+      "x": 13,
+      "y": 56,
+      "width": 7,
+      "height": 9,
+      "seat_name": "左側制作デスク"
+    },
+    {
+      "seat_id": "A3",
+      "x": 13,
+      "y": 73,
+      "width": 7,
+      "height": 9,
+      "seat_name": "左側制作デスク"
+    },
+    {
+      "seat_id": "B1",
+      "x": 39,
+      "y": 47,
+      "width": 8,
+      "height": 9,
+      "seat_name": "中央編集ブース"
+    },
+    {
+      "seat_id": "B2",
+      "x": 53,
+      "y": 47,
+      "width": 8,
+      "height": 9,
+      "seat_name": "中央編集ブース"
+    },
+    {
+      "seat_id": "B3",
+      "x": 40,
+      "y": 64,
+      "width": 8,
+      "height": 9,
+      "seat_name": "中央編集ブース"
+    },
+    {
+      "seat_id": "B4",
+      "x": 54,
+      "y": 64,
+      "width": 8,
+      "height": 9,
+      "seat_name": "中央編集ブース"
+    },
+    {
+      "seat_id": "C1",
+      "x": 25,
+      "y": 23,
+      "width": 7,
+      "height": 8,
+      "seat_name": "上段モニター席"
+    },
+    {
+      "seat_id": "C2",
+      "x": 35,
+      "y": 23,
+      "width": 7,
+      "height": 8,
+      "seat_name": "上段モニター席"
+    },
+    {
+      "seat_id": "C3",
+      "x": 45,
+      "y": 23,
+      "width": 7,
+      "height": 8,
+      "seat_name": "上段モニター席"
+    },
+    {
+      "seat_id": "C4",
+      "x": 55,
+      "y": 23,
+      "width": 7,
+      "height": 8,
+      "seat_name": "上段モニター席"
+    },
+    {
+      "seat_id": "C5",
+      "x": 65,
+      "y": 23,
+      "width": 7,
+      "height": 8,
+      "seat_name": "上段モニター席"
+    },
+    {
+      "seat_id": "W1",
+      "x": 27,
+      "y": 88,
+      "width": 7,
+      "height": 8,
+      "seat_name": "下段レンダー席"
+    },
+    {
+      "seat_id": "W2",
+      "x": 37,
+      "y": 88,
+      "width": 7,
+      "height": 8,
+      "seat_name": "下段レンダー席"
+    },
+    {
+      "seat_id": "W3",
+      "x": 46,
+      "y": 88,
+      "width": 7,
+      "height": 8,
+      "seat_name": "下段レンダー席"
+    },
+    {
+      "seat_id": "W4",
+      "x": 56,
+      "y": 88,
+      "width": 7,
+      "height": 8,
+      "seat_name": "下段レンダー席"
+    },
+    {
+      "seat_id": "W5",
+      "x": 65,
+      "y": 88,
+      "width": 7,
+      "height": 8,
+      "seat_name": "下段レンダー席"
+    },
+    {
+      "seat_id": "L1",
+      "x": 84,
+      "y": 51,
+      "width": 7,
+      "height": 9,
+      "seat_name": "右側配信席"
+    },
+    {
+      "seat_id": "L2",
+      "x": 84,
+      "y": 66,
+      "width": 7,
+      "height": 9,
+      "seat_name": "右側配信席"
+    }
+  ],
+  "night": [
+    {
+      "seat_id": "A1",
+      "x": 12,
+      "y": 18,
+      "width": 5,
+      "height": 8,
+      "seat_name": "窓側カウンター"
+    },
+    {
+      "seat_id": "A2",
+      "x": 12,
+      "y": 30,
+      "width": 5,
+      "height": 8,
+      "seat_name": "窓側カウンター"
+    },
+    {
+      "seat_id": "A3",
+      "x": 12,
+      "y": 42,
+      "width": 5,
+      "height": 8,
+      "seat_name": "窓側カウンター"
+    },
+    {
+      "seat_id": "A4",
+      "x": 12,
+      "y": 55,
+      "width": 5,
+      "height": 8,
+      "seat_name": "窓側カウンター"
+    },
+    {
+      "seat_id": "B1",
+      "x": 31,
+      "y": 21,
+      "width": 6,
+      "height": 8,
+      "seat_name": "上段個人席"
+    },
+    {
+      "seat_id": "B2",
+      "x": 43,
+      "y": 21,
+      "width": 6,
+      "height": 8,
+      "seat_name": "上段個人席"
+    },
+    {
+      "seat_id": "C1",
+      "x": 33,
+      "y": 48,
+      "width": 6,
+      "height": 8,
+      "seat_name": "中央ロングテーブル"
+    },
+    {
+      "seat_id": "C2",
+      "x": 40,
+      "y": 48,
+      "width": 6,
+      "height": 8,
+      "seat_name": "中央ロングテーブル"
+    },
+    {
+      "seat_id": "C3",
+      "x": 47,
+      "y": 48,
+      "width": 6,
+      "height": 8,
+      "seat_name": "中央ロングテーブル"
+    },
+    {
+      "seat_id": "C4",
+      "x": 54,
+      "y": 48,
+      "width": 6,
+      "height": 8,
+      "seat_name": "中央ロングテーブル"
+    },
+    {
+      "seat_id": "D1",
+      "x": 33,
+      "y": 69,
+      "width": 6,
+      "height": 8,
+      "seat_name": "長時間集中席"
+    },
+    {
+      "seat_id": "D2",
+      "x": 41,
+      "y": 69,
+      "width": 6,
+      "height": 8,
+      "seat_name": "長時間集中席"
+    },
+    {
+      "seat_id": "D3",
+      "x": 50,
+      "y": 69,
+      "width": 6,
+      "height": 8,
+      "seat_name": "長時間集中席"
+    },
+    {
+      "seat_id": "D4",
+      "x": 57,
+      "y": 69,
+      "width": 6,
+      "height": 8,
+      "seat_name": "長時間集中席"
+    },
+    {
+      "seat_id": "E1",
+      "x": 76,
+      "y": 49,
+      "width": 7,
+      "height": 9,
+      "seat_name": "月明かり個室席"
+    },
+    {
+      "seat_id": "E2",
+      "x": 79,
+      "y": 85,
+      "width": 7,
+      "height": 9,
+      "seat_name": "ソファ横休憩席"
+    }
+  ]
+}

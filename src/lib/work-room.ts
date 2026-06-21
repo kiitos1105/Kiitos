@@ -1,5 +1,6 @@
 import { elapsedSecondsSince } from "./time";
 import { ROOM_CONFIGS, type RoomId, getRoomConfig } from "./room-config";
+import { getRoomSeatLayout } from "./roomSeatLayouts";
 import type { DisplayParticipant, DisplayRoom, DisplayState, Platform } from "./types";
 
 export type SeatStatus = "available" | "occupied" | "mine" | "reserved";
@@ -83,8 +84,6 @@ const SAMPLE_NAMES: Record<RoomId, string[]> = {
   night: ["Noa"]
 };
 
-const SEAT_IDS = ["A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "C1", "C2", "C3", "C4"];
-
 export function getRoomDetails(now = new Date()): RoomDetail[] {
   return ROOM_CONFIGS.map((room, roomIndex) => {
     const participants = createMockParticipants(room.id, roomIndex, now);
@@ -141,11 +140,13 @@ function createMockParticipants(
   roomIndex: number,
   now: Date
 ): DisplayParticipant[] {
+  const seats = getRoomSeatLayout(roomId);
+
   return SAMPLE_NAMES[roomId].map((name, index) => {
     const startedAt = new Date(
       now.getTime() - (roomIndex * 18 + index * 11 + 24) * 60 * 1000
     ).toISOString();
-    const seatId = SEAT_IDS[index + roomIndex];
+    const seatId = seats[index + roomIndex]?.seat_id ?? seats[index]?.seat_id ?? "A1";
 
     return {
       id: `${roomId}-${name.toLowerCase()}`,
@@ -162,16 +163,16 @@ function createSeats(roomId: RoomId, participants: DisplayParticipant[]): Seat[]
   const participantBySeat = new Map(
     participants.map((participant) => [participant.seatId, participant])
   );
-  const zones = SEAT_ZONES[roomId];
+  const layout = getRoomSeatLayout(roomId);
 
-  return SEAT_IDS.map((seatId, index) => {
-    const user = participantBySeat.get(seatId);
-    const reserved = !user && index === 9;
+  return layout.map((seat, index) => {
+    const user = participantBySeat.get(seat.seat_id);
+    const reserved = !user && index === layout.length - 2;
 
     return {
-      id: seatId,
-      label: seatId,
-      zone: zones[Math.min(Math.floor(index / 3), zones.length - 1)],
+      id: seat.seat_id,
+      label: seat.seat_id,
+      zone: seat.seat_name || SEAT_ZONES[roomId][0],
       status: user ? "occupied" : reserved ? "reserved" : "available",
       user
     };

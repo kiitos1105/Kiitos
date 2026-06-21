@@ -5,6 +5,7 @@ export type AdminSettings = {
   globalAnnouncement: string;
   roomAnnouncements: Record<string, string>;
   pomodoroRunning: boolean;
+  prioritizePopularRooms: boolean;
   disabledRooms: string[];
   actions: ReturnType<typeof createAdminAction>[];
 };
@@ -14,6 +15,7 @@ const settings: AdminSettings = {
   globalAnnouncement: "Welcome back to Kiitos Work Room.",
   roomAnnouncements: {},
   pomodoroRunning: true,
+  prioritizePopularRooms: false,
   disabledRooms: [],
   actions: []
 };
@@ -30,9 +32,10 @@ export function verifyAdminPassword(password: string) {
 export function updateAdminSettings(
   password: string,
   patch: Partial<Omit<AdminSettings, "actions">>,
-  action?: AdminActionDraft
+  action?: AdminActionDraft,
+  trusted = false
 ) {
-  if (!verifyAdminPassword(password)) {
+  if (!trusted && !verifyAdminPassword(password)) {
     throw new Error("Invalid admin password");
   }
 

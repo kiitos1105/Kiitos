@@ -16,6 +16,7 @@
 ## Routes
 
 - `/lobby`: Kiitos Work Roomの入口。部屋画像カードから入室
+- `/rooms`: `/lobby` へリダイレクト
 - `/display`: OBS用の全体表示
 - `/rooms/cafe`: Cafe Room
 - `/rooms/library`: Library Room
@@ -23,7 +24,12 @@
 - `/rooms/creator`: Creator Room
 - `/rooms/night`: Night Room
 - `/camera`: OBS用の定点カメラ巡回
-- `/admin`: 管理画面
+- `/admin`: 管理画面入口
+- `/admin/login`: Adminログイン
+- `/admin/dashboard`: Admin Dashboard
+- `/admin/seat-editor`: 座席手動調整モード
+- `/admin/users`: 参加者管理
+- `/admin/camera`: 定点カメラ設定
 
 ## Rooms
 
@@ -35,25 +41,50 @@
 - `creator`: Creator Room
 - `night`: Night Room
 
-席IDは `A1` から `C4` です。
+席IDは部屋ごとの座席表に合わせて `A1` / `B1` / `chair_01` などを使えます。
 
 ## Room Images
 
 部屋画像は以下のパスに置く想定です。
 
 ```text
-public/rooms/cafe.jpg
-public/rooms/library.jpg
-public/rooms/office.jpg
-public/rooms/creator.jpg
-public/rooms/night.jpg
+public/rooms/cafe-room.png
+public/rooms/library-room.png
+public/rooms/office-room.png
+public/rooms/creator-room.png
+public/rooms/night-room.png
 ```
 
-画像が未配置でもグラデーションのフォールバック背景で動きます。画像を追加すると、`/lobby`
-の部屋カードと `/rooms/[roomId]` の部屋背景にそのまま反映されます。
+座席表画像:
 
-`/rooms/[roomId]` では、部屋画像の上に席ボタンを絶対配置しています。席をクリックすると右側に
-席詳細が出て、「この席に座る」で自分の席として表示されます。
+```text
+public/rooms/cafe-seat-map.png
+public/rooms/library-seat-map.png
+public/rooms/office-seat-map.png
+public/rooms/creator-seat-map.png
+public/rooms/night-seat-map.png
+```
+
+画像が未配置でもグラデーションのフォールバック背景で動きます。
+
+`/lobby` は部屋紹介画像をカードとして表示します。`/rooms/[roomId]` では座席表画像を大きく表示し、
+`src/lib/roomSeatLayouts.ts` の座標に基づいて透明なクリック領域を椅子の上に配置しています。
+席番号は座席表の上には追加表示せず、内部の `seat_id` として保持します。
+
+座席座標は `%` で管理します。
+
+```json
+{
+  "seat_id": "chair_01",
+  "seat_name": "窓際席 1",
+  "x": 23.4,
+  "y": 45.8,
+  "width": 4.2,
+  "height": 5.0
+}
+```
+
+`/admin/seat-editor` で保存すると `public/data/seat-layouts.json` に反映されます。
 
 ## Setup
 
@@ -70,7 +101,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_DISPLAY_BGM=Lo-Fi Rainy Desk
 NEXT_PUBLIC_DISPLAY_WEATHER=Tokyo · Light Rain
-ADMIN_PASSWORD=
+ADMIN_PASSWORD=change-me
 SESSION_WORKER_INTERVAL_MS=60000
 ```
 
@@ -112,10 +143,13 @@ http://localhost:3000/admin
 
 ## Admin
 
-`/admin` は `ADMIN_PASSWORD` による簡易認証です。
+`/admin/login` は `ADMIN_PASSWORD` による簡易認証です。ログイン後は `/admin/dashboard`
+へ移動し、画面上部に `Admin Mode` が表示されます。通常画面の右下にある `Admin`
+ボタンからログインできます。
 
 MVPで用意している操作:
 
+- 座席位置の手動調整
 - 現在の参加者一覧
 - 部屋ごとの参加者一覧
 - 席ごとの利用者一覧
@@ -129,6 +163,30 @@ MVPで用意している操作:
 - ポモドーロ開始/停止
 - 部屋の有効/無効切り替え
 - 定点カメラの巡回秒数変更
+- 人が多い部屋を優先表示ON/OFF
+
+Admin routes:
+
+```text
+http://localhost:3000/admin/login
+http://localhost:3000/admin/dashboard
+http://localhost:3000/admin/seat-editor
+http://localhost:3000/admin/users
+http://localhost:3000/admin/camera
+```
+
+## Weather
+
+`/lobby` `/display` `/camera` では日本各地のダミー天気を1〜2分ごとに切り替えて表示します。
+
+- 北海道
+- 仙台
+- 東京
+- 名古屋
+- 大阪
+- 広島
+- 福岡
+- 沖縄
 
 ## Camera
 

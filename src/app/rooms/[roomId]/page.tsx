@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
-import { getRoomConfig, ROOM_SEAT_POSITIONS } from "@/lib/room-config";
+import { useEffect, useMemo, useState } from "react";
+import { getRoomConfig } from "@/lib/room-config";
+import { getRoomSeatLayout } from "@/lib/roomSeatLayouts";
+import type { RoomSeatLayout } from "@/lib/roomSeatLayouts";
 import { formatDuration } from "@/lib/time";
 import { getRoomDetail } from "@/lib/work-room";
 import type { Seat, SeatStatus } from "@/lib/work-room";
@@ -14,6 +16,29 @@ export default function RoomPage() {
   const room = useMemo(() => getRoomDetail(params.roomId), [params.roomId]);
   const [selectedSeatId, setSelectedSeatId] = useState("A1");
   const [mySeatId, setMySeatId] = useState<string | null>(null);
+  const [myStartedAt, setMyStartedAt] = useState<string | null>(null);
+  const [savedSeatLayout, setSavedSeatLayout] = useState<RoomSeatLayout[] | null>(null);
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setTick((value) => value + 1), 1000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    fetch(`/api/seat-layouts?roomId=${params.roomId}`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((layout: RoomSeatLayout[] | null) => {
+        if (layout?.length) {
+          setSavedSeatLayout(layout);
+          setSelectedSeatId(
+            (current) =>
+              layout.find((seat) => seat.seat_id === current)?.seat_id ?? layout[0].seat_id
+          );
+        }
+      })
+      .catch(() => undefined);
+  }, [params.roomId]);
 
   if (!room) {
     return (
@@ -32,12 +57,22 @@ export default function RoomPage() {
   }
 
   const config = getRoomConfig(room.roomId);
-  const seatPositions = ROOM_SEAT_POSITIONS[room.roomId];
-  const selectedSeat = room.seats.find((seat) => seat.id === selectedSeatId) ?? room.seats[0];
+  const seatLayout = savedSeatLayout ?? getRoomSeatLayout(room.roomId);
   const selectedPosition =
-    seatPositions.find((position) => position.id === selectedSeat.id) ?? seatPositions[0];
+    seatLayout.find((position) => position.seat_id === selectedSeatId) ?? seatLayout[0];
+  const selectedSeat = getSeatForLayout(room.seats, selectedPosition);
   const activeSeats = room.seats.filter((seat) => seat.status === "occupied").length;
   const availableSeats = room.seats.filter((seat) => seat.status === "available").length;
+
+  function enterSeat() {
+    setMySeatId(selectedSeat.id);
+    setMyStartedAt(new Date().toISOString());
+  }
+
+  function leaveSeat() {
+    setMySeatId(null);
+    setMyStartedAt(null);
+  }
 
   return (
     <main className="room-page relative min-h-screen overflow-hidden bg-cafe-950 text-stone-50">
@@ -77,10 +112,10 @@ export default function RoomPage() {
             <div
               className={`room-map-image absolute inset-0 bg-cover bg-center ${roomFallbackClass(room.roomId)}`}
               style={{
-                backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.48)), url(${config.image})`
+                backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.18)), url(${config.seatMapImage})`
               }}
             />
-            <div className="room-map-vignette absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,transparent_0_38%,rgba(0,0,0,0.34)_70%),linear-gradient(90deg,rgba(0,0,0,0.48),transparent_28%,transparent_72%,rgba(0,0,0,0.56))]" />
+            <div className="room-map-vignette absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,transparent_0_46%,rgba(0,0,0,0.18)_76%),linear-gradient(90deg,rgba(0,0,0,0.18),transparent_22%,transparent_78%,rgba(0,0,0,0.22))]" />
             <div
               className={`absolute inset-x-10 top-0 h-1.5 rounded-b-full ${config.accent.line}`}
             />
@@ -88,24 +123,22 @@ export default function RoomPage() {
 
             <div className="room-map-copy absolute left-6 top-6 max-w-lg rounded-[2rem] border border-white/12 bg-black/30 p-5 shadow-2xl backdrop-blur-2xl">
               <p className="text-xs font-black uppercase tracking-normal text-amber-100/65">
-                Choose your seat
+                Seat map
               </p>
-              <h2 className="mt-2 text-4xl font-black">席を選んでください</h2>
+              <h2 className="mt-2 text-4xl font-black">椅子を選んでください</h2>
               <p className="mt-3 text-sm font-semibold leading-6 text-stone-100/68">
-                {config.description}
+                座席表の椅子をクリックすると、右側に席情報が表示されます。
               </p>
             </div>
 
-            {seatPositions.map((position) => {
-              const seat = room.seats.find((item) => item.id === position.id);
-              if (!seat) {
-                return null;
-              }
+            {seatLayout.map((position) => {
+              const seat = getSeatForLayout(room.seats, position);
 
               return (
                 <SeatPin
-                  key={position.id}
+                  key={position.seat_id}
                   mine={mySeatId === seat.id}
+                  myStartedAt={myStartedAt}
                   onClick={() => setSelectedSeatId(seat.id)}
                   position={position}
                   seat={seat}
@@ -119,8 +152,8 @@ export default function RoomPage() {
               style={{
                 left: `${selectedPosition.x}%`,
                 top: `${selectedPosition.y}%`,
-                width: "9rem",
-                height: "9rem",
+                width: `${selectedPosition.width + 5}%`,
+                height: `${selectedPosition.height + 5}%`,
                 transform: "translate(-50%, -50%)"
               }}
             />
@@ -133,10 +166,9 @@ export default function RoomPage() {
                 <p className="mt-1 text-sm font-bold text-stone-100/78">{room.rules.join(" / ")}</p>
               </div>
               <div className="flex gap-2 text-xs font-black">
-                <LegendDot label="空席" tone="available" />
+                <LegendDot label="空いている椅子" tone="available" />
                 <LegendDot label="使用中" tone="occupied" />
-                <LegendDot label="自分" tone="mine" />
-                <LegendDot label="予約" tone="reserved" />
+                <LegendDot label="あなた" tone="mine" />
               </div>
             </div>
           </div>
@@ -144,10 +176,11 @@ export default function RoomPage() {
           <aside className="room-side grid min-h-0 gap-5 xl:grid-rows-[auto_1fr]">
             <SeatDetail
               mySeatId={mySeatId}
-              onEnter={() => setMySeatId(selectedSeat.id)}
-              onLeave={() => setMySeatId(null)}
+              myStartedAt={myStartedAt}
+              onEnter={enterSeat}
+              onLeave={leaveSeat}
               seat={selectedSeat}
-              visualLabel={selectedPosition.label}
+              visualLabel={selectedPosition.seat_name}
             />
 
             <div className="grid min-h-0 gap-5 lg:grid-cols-2 xl:grid-cols-1">
@@ -210,34 +243,66 @@ function SeatPin({
   position,
   selected,
   mine,
+  myStartedAt,
   onClick
 }: {
   seat: Seat;
-  position: { id: string; x: number; y: number; label: string };
+  position: RoomSeatLayout;
   selected: boolean;
   mine: boolean;
+  myStartedAt: string | null;
   onClick: () => void;
 }) {
-  const status = mine ? "mine" : seat.status;
-  const toneClass = getSeatTone(status);
+  const activeUser = mine
+    ? {
+        displayName: "You",
+        startedAt: myStartedAt,
+        elapsedSeconds: myStartedAt
+          ? Math.floor((Date.now() - new Date(myStartedAt).getTime()) / 1000)
+          : 0
+      }
+    : seat.user;
 
   return (
     <button
-      className={`absolute z-20 grid h-16 w-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border font-mono text-lg font-black shadow-2xl backdrop-blur-2xl transition duration-300 hover:scale-110 sm:h-20 sm:w-20 sm:text-2xl ${toneClass} ${
-        selected ? "ring-4 ring-amber-100/65" : ""
-      }`}
+      className={`seat-hotspot absolute z-20 -translate-x-1/2 -translate-y-1/2 rounded-[1.25rem] transition duration-300 hover:bg-amber-100/10 ${
+        selected ? "seat-hotspot-selected" : ""
+      } ${activeUser ? "seat-hotspot-active" : ""}`}
       onClick={onClick}
-      style={{ left: `${position.x}%`, top: `${position.y}%` }}
-      title={`${seat.id} ${position.label}`}
+      style={{
+        left: `${position.x}%`,
+        top: `${position.y}%`,
+        width: `${position.width}%`,
+        height: `${position.height}%`
+      }}
+      title={position.seat_name}
       type="button"
     >
-      <span>{seat.id}</span>
-      {seat.user ? (
-        <span className="absolute -bottom-7 max-w-24 truncate rounded-full border border-white/10 bg-black/48 px-2 py-1 text-[0.65rem] font-black text-stone-100/80 backdrop-blur-xl">
-          {seat.user.displayName}
+      {activeUser ? (
+        <span className="seat-avatar pointer-events-none absolute left-1/2 top-1/2 grid -translate-x-1/2 -translate-y-1/2 gap-1 rounded-2xl border border-amber-100/35 bg-black/58 px-3 py-2 text-center shadow-[0_0_40px_rgba(253,230,138,0.25)] backdrop-blur-2xl">
+          <span className="mx-auto grid h-9 w-9 place-items-center rounded-full bg-amber-100 text-sm font-black text-stone-950">
+            {activeUser.displayName.slice(0, 1)}
+          </span>
+          <span className="max-w-24 truncate text-xs font-black text-stone-50">
+            {activeUser.displayName}
+          </span>
+          <span className="font-mono text-[0.65rem] font-black text-amber-100">
+            {formatDuration(activeUser.elapsedSeconds)}
+          </span>
         </span>
       ) : null}
     </button>
+  );
+}
+
+function getSeatForLayout(seats: Seat[], layout: RoomSeatLayout): Seat {
+  return (
+    seats.find((seat) => seat.id === layout.seat_id) ?? {
+      id: layout.seat_id,
+      label: layout.seat_id,
+      zone: layout.seat_name,
+      status: "available"
+    }
   );
 }
 
@@ -245,25 +310,31 @@ function SeatDetail({
   seat,
   visualLabel,
   mySeatId,
+  myStartedAt,
   onEnter,
   onLeave
 }: {
   seat: Seat;
   visualLabel: string;
   mySeatId: string | null;
+  myStartedAt: string | null;
   onEnter: () => void;
   onLeave: () => void;
 }) {
   const isMine = mySeatId === seat.id;
   const canEnter = seat.status === "available" || isMine;
   const status = isMine ? "自分の席" : getSeatStatusLabel(seat.status);
+  const elapsedSeconds =
+    isMine && myStartedAt
+      ? Math.floor((Date.now() - new Date(myStartedAt).getTime()) / 1000)
+      : seat.user?.elapsedSeconds;
 
   return (
     <section className="glass-panel rounded-[2.25rem] p-6">
       <p className="text-xs font-black uppercase tracking-normal text-amber-100/62">Seat detail</p>
       <div className="mt-4 flex items-end justify-between gap-4">
         <div>
-          <h2 className="font-mono text-7xl font-black leading-none">{seat.id}</h2>
+          <h2 className="text-4xl font-black leading-tight">{visualLabel}</h2>
           <p className="mt-3 text-lg font-black text-amber-100">{visualLabel}</p>
           <p className="mt-1 text-sm font-bold text-stone-200/58">{seat.zone}</p>
         </div>
@@ -280,11 +351,17 @@ function SeatDetail({
         <DetailLine label="利用者" value={isMine ? "You" : (seat.user?.displayName ?? "空席")} />
         <DetailLine
           label="作業開始"
-          value={seat.user?.startedAt ? formatClock(new Date(seat.user.startedAt)) : "--"}
+          value={
+            isMine && myStartedAt
+              ? formatClock(new Date(myStartedAt))
+              : seat.user?.startedAt
+                ? formatClock(new Date(seat.user.startedAt))
+                : "--"
+          }
         />
         <DetailLine
           label="経過時間"
-          value={seat.user ? formatDuration(seat.user.elapsedSeconds) : "--:--:--"}
+          value={elapsedSeconds !== undefined ? formatDuration(elapsedSeconds) : "--:--:--"}
         />
       </div>
 

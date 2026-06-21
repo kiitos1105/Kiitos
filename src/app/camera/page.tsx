@@ -4,13 +4,24 @@ import { useEffect, useMemo, useState } from "react";
 import { getRoomDetails } from "@/lib/work-room";
 import { getRoomConfig } from "@/lib/room-config";
 import { formatDuration } from "@/lib/time";
+import { getRotatingWeather } from "@/lib/weather";
 
 export default function CameraPage() {
   const rooms = useMemo(() => getRoomDetails(), []);
   const [activeIndex, setActiveIndex] = useState(0);
   const [intervalSeconds, setIntervalSeconds] = useState(7);
-  const activeRoom = rooms[activeIndex];
+  const [prioritizePopularRooms, setPrioritizePopularRooms] = useState(false);
+  const [, setTick] = useState(0);
+  const displayRooms = useMemo(
+    () =>
+      prioritizePopularRooms
+        ? [...rooms].sort((a, b) => b.participants.length - a.participants.length)
+        : rooms,
+    [prioritizePopularRooms, rooms]
+  );
+  const activeRoom = displayRooms[activeIndex % displayRooms.length];
   const config = getRoomConfig(activeRoom.roomId);
+  const weather = getRotatingWeather(new Date());
   const totalFocus = activeRoom.participants.reduce(
     (sum, participant) => sum + participant.elapsedSeconds,
     0
@@ -19,18 +30,26 @@ export default function CameraPage() {
   useEffect(() => {
     fetch("/api/admin/settings")
       .then((response) => response.json())
-      .then((settings) => setIntervalSeconds(settings.cameraIntervalSeconds ?? 7))
+      .then((settings) => {
+        setIntervalSeconds(settings.cameraIntervalSeconds ?? 7);
+        setPrioritizePopularRooms(Boolean(settings.prioritizePopularRooms));
+      })
       .catch(() => undefined);
   }, []);
 
   useEffect(() => {
+    const timer = window.setInterval(() => setTick((value) => value + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
     const timer = window.setInterval(
-      () => setActiveIndex((index) => (index + 1) % rooms.length),
+      () => setActiveIndex((index) => (index + 1) % displayRooms.length),
       intervalSeconds * 1000
     );
 
     return () => window.clearInterval(timer);
-  }, [intervalSeconds, rooms.length]);
+  }, [intervalSeconds, displayRooms.length]);
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-cafe-950 p-8 text-stone-50">
@@ -42,7 +61,11 @@ export default function CameraPage() {
 
       <section className="relative z-10 grid min-h-[calc(100vh-4rem)] grid-cols-[1fr_360px] gap-6">
         <div className="glass-panel camera-frame relative overflow-hidden rounded-[2.5rem] p-8">
-          <div className="absolute inset-0 scale-105 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.13),transparent_30%)] transition duration-[1800ms]" />
+          <div
+            className="absolute inset-0 scale-105 bg-cover bg-center opacity-60 transition duration-[1800ms]"
+            style={{ backgroundImage: `url(${config.seatMapImage})` }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/20" />
           <div className="relative z-10 flex h-full flex-col justify-between">
             <header className="flex items-start justify-between">
               <div>
@@ -63,13 +86,17 @@ export default function CameraPage() {
               </span>
             </header>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <CameraMetric label="参加者" value={`${activeRoom.participants.length}`} />
               <CameraMetric label="集中時間" value={formatDuration(totalFocus)} />
               <CameraMetric label="BGM" value={activeRoom.bgm} />
+              <CameraMetric
+                label="天気"
+                value={`${weather.area} ${weather.temperature} ${weather.condition}`}
+              />
             </div>
 
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-5 gap-3">
               {activeRoom.seats.map((seat) => (
                 <div
                   className={`rounded-2xl border px-3 py-3 ${
@@ -92,7 +119,7 @@ export default function CameraPage() {
         </div>
 
         <aside className="grid gap-5">
-          {rooms.map((room, index) => (
+          {displayRooms.map((room, index) => (
             <button
               className={`glass-panel rounded-[1.5rem] p-4 text-left transition duration-500 ${
                 index === activeIndex ? "scale-[1.02] border-amber-100/45" : "opacity-55"

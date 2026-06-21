@@ -185,6 +185,34 @@ body::selection {
   gap: 1.25rem;
 }
 
+.seat-hotspot {
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  outline: none;
+}
+
+.seat-hotspot:hover,
+.seat-hotspot:focus-visible {
+  border-color: rgba(253, 230, 138, 0.45);
+  background: rgba(253, 230, 138, 0.08);
+  box-shadow: 0 0 36px rgba(253, 230, 138, 0.16);
+}
+
+.seat-hotspot-selected {
+  border-color: rgba(253, 230, 138, 0.68);
+  background: rgba(253, 230, 138, 0.1);
+  box-shadow: 0 0 58px rgba(253, 230, 138, 0.24);
+}
+
+.seat-hotspot-active {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.seat-avatar {
+  min-width: 5.25rem;
+}
+
 @media (min-width: 1280px) {
   .room-stage {
     grid-template-columns: minmax(0, 1fr) 420px;
