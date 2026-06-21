@@ -39,12 +39,13 @@ Supabase SQL Editor で `supabase/schema.sql` を実行してください。
 - `rooms`
 - `active_sessions`
 
-初期部屋:
+初期部屋と将来の入室ID:
 
-- 編集
-- 勉強
-- 作業
-- デザイン
+- `cafe`: Cafe Room
+- `library`: Library Room
+- `office`: Office Room
+- `creator`: Creator Room
+- `night`: Night Room
 
 `/display` は `active_sessions` を読み取り、部屋別の参加者と経過時間を表示します。
 

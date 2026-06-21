@@ -13,6 +13,10 @@ export type DisplayParticipant = {
 export type DisplayRoom = {
   id: RoomRow["id"];
   name: RoomRow["name"];
+  description?: string;
+  icon?: string;
+  mood?: string;
+  shortName?: string;
   participants: DisplayParticipant[];
 };
 

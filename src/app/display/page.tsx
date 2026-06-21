@@ -3,18 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatDuration } from "@/lib/time";
 import type { DisplayParticipant, DisplayRoom } from "@/lib/types";
+import { getRoomConfig } from "@/lib/room-config";
 import { useDisplayState } from "./use-display-state";
 
 const POMODORO_WORK_SECONDS = 25 * 60;
 const POMODORO_BREAK_SECONDS = 5 * 60;
 const POMODORO_CYCLE_SECONDS = POMODORO_WORK_SECONDS + POMODORO_BREAK_SECONDS;
-
-const ROOM_ACCENTS: Record<string, { light: string; wood: string; icon: string }> = {
-  編集: { light: "from-amber-200/35", wood: "bg-[#8f5f3b]", icon: "⌘" },
-  勉強: { light: "from-emerald-200/30", wood: "bg-[#6f6a43]", icon: "✎" },
-  作業: { light: "from-sky-200/25", wood: "bg-[#7a5135]", icon: "◇" },
-  デザイン: { light: "from-rose-200/28", wood: "bg-[#825247]", icon: "△" }
-};
 
 export default function DisplayPage() {
   const { state, connectionState } = useDisplayState();
@@ -73,8 +67,8 @@ export default function DisplayPage() {
                 Kiitos
                 <span className="block text-amber-100">Work Room</span>
               </h1>
-              <p className="mt-7 max-w-2xl text-xl font-medium leading-8 text-stone-200/68">
-                静かな雨音、木のぬくもり、画面越しに集まる夜の作業部屋。
+              <p className="mt-7 max-w-3xl text-xl font-medium leading-8 text-stone-200/68">
+                配信を見た人が入りたくなる、居心地のいいオンライン自習室。
               </p>
             </div>
           </div>
@@ -91,8 +85,8 @@ export default function DisplayPage() {
           </aside>
         </header>
 
-        <section className="grid min-h-0 gap-5 lg:grid-cols-[1fr_360px]">
-          <div className="grid gap-5 xl:grid-cols-4">
+        <section className="grid min-h-0 gap-5 lg:grid-cols-[1fr_330px]">
+          <div className="grid gap-5 xl:grid-cols-5">
             {state.rooms.map((room) => (
               <RoomCard key={room.id} room={room} now={now} />
             ))}
@@ -202,29 +196,44 @@ function PomodoroTile({ pomodoro }: { pomodoro: ReturnType<typeof getPomodoroSta
 }
 
 function RoomCard({ room, now }: { room: DisplayRoom; now: Date }) {
-  const accent = ROOM_ACCENTS[room.name] ?? ROOM_ACCENTS["作業"];
+  const config = getRoomConfig(room.id);
+  const accent = config.accent;
 
   return (
-    <article className="glass-panel group relative min-h-[520px] overflow-hidden rounded-[2rem]">
+    <article className="glass-panel group relative min-h-[560px] overflow-hidden rounded-[2rem]">
       <div
-        className={`absolute inset-x-0 top-0 h-28 bg-gradient-to-b ${accent.light} to-transparent`}
+        className={`absolute inset-x-0 top-0 h-28 bg-gradient-to-b ${accent.glow} to-transparent`}
       />
-      <div className={`absolute inset-x-6 top-0 h-1.5 rounded-b-full ${accent.wood}`} />
+      <div className={`absolute inset-x-6 top-0 h-1.5 rounded-b-full ${accent.line}`} />
 
-      <header className="relative z-10 flex items-start justify-between p-5">
+      <header className="relative z-10 flex items-start justify-between gap-4 p-5">
         <div>
-          <p className="text-xs font-black uppercase tracking-normal text-stone-200/45">Room</p>
-          <h2 className="mt-2 text-4xl font-black tracking-normal text-stone-50">{room.name}</h2>
+          <p className="text-xs font-black uppercase tracking-normal text-stone-200/45">
+            /in {config.id}
+          </p>
+          <h2 className="mt-2 text-3xl font-black tracking-normal text-stone-50">{config.name}</h2>
         </div>
-        <div className="grid h-16 w-16 place-items-center rounded-3xl border border-white/14 bg-white/10 text-2xl font-black text-amber-100 shadow-inner">
-          {accent.icon}
+        <div
+          className={`grid h-16 w-16 shrink-0 place-items-center rounded-3xl border border-white/14 bg-white/10 text-2xl font-black ${accent.text} shadow-inner`}
+        >
+          {config.icon}
         </div>
       </header>
 
       <div className="relative z-10 px-5 pb-5">
+        <p className="mb-4 min-h-[72px] text-sm font-medium leading-6 text-stone-200/62">
+          {config.description}
+        </p>
+
+        <p
+          className={`mb-4 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-xs font-black uppercase tracking-normal ${accent.text}`}
+        >
+          {config.mood}
+        </p>
+
         <div className="mb-4 flex items-center justify-between rounded-3xl border border-white/10 bg-black/20 px-4 py-3">
           <span className="text-sm font-bold text-stone-200/60">Members</span>
-          <strong className="font-mono text-2xl font-black text-amber-100">
+          <strong className={`font-mono text-2xl font-black ${accent.text}`}>
             {String(room.participants.length).padStart(2, "0")}
           </strong>
         </div>
@@ -232,7 +241,7 @@ function RoomCard({ room, now }: { room: DisplayRoom; now: Date }) {
         <div className="flex flex-col gap-3">
           {room.participants.length === 0 ? (
             <p className="grid min-h-40 place-items-center rounded-[1.75rem] border border-dashed border-white/14 bg-black/18 text-lg font-bold text-stone-200/35">
-              Quiet table
+              Open seat
             </p>
           ) : (
             room.participants.map((participant) => (

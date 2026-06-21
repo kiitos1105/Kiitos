@@ -3,6 +3,8 @@ export type Platform = "youtube" | "discord";
 export type RoomRow = {
   id: string;
   name: string;
+  description: string | null;
+  icon: string | null;
 };
 
 export type ActiveSessionRow = {
@@ -24,8 +26,10 @@ export type Database = {
       rooms: {
         Row: RoomRow;
         Insert: {
-          id?: string;
+          id: string;
           name: string;
+          description?: string | null;
+          icon?: string | null;
         };
         Update: Partial<RoomRow>;
         Relationships: [];
