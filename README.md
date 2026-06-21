@@ -26,6 +26,8 @@ cp .env.example .env.local
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_DISPLAY_BGM=Lo-Fi Rainy Desk
+NEXT_PUBLIC_DISPLAY_WEATHER=Tokyo · Light Rain
 ```
 
 ## Supabase
@@ -45,6 +47,8 @@ Supabase SQL Editor で `supabase/schema.sql` を実行してください。
 - デザイン
 
 `/display` は `active_sessions` を読み取り、部屋別の参加者と経過時間を表示します。
+
+`NEXT_PUBLIC_DISPLAY_BGM` と `NEXT_PUBLIC_DISPLAY_WEATHER` はOBS画面右側の表示テキストです。配信内容に合わせて自由に差し替えられます。
 
 ## Development
 
