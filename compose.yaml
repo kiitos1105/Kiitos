@@ -1,0 +1,9 @@
+services:
+  web:
+    build: .
+    command: node server.js
+    env_file:
+      - .env.local
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
