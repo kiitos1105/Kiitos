@@ -335,11 +335,9 @@ function ComingSoonModal({ label, onClose }: { label: string; onClose: () => voi
 function LobbyBackground() {
   return (
     <>
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(255,214,158,0.24),transparent_30%),radial-gradient(circle_at_82%_16%,rgba(151,114,78,0.2),transparent_34%),linear-gradient(180deg,rgb(10,17,20),rgb(5,7,8))]" />
-      <div className="pointer-events-none fixed inset-0 bg-[url('/rooms/cafe-room.png')] bg-cover bg-center opacity-20 blur-sm" />
-      <div className="pointer-events-none fixed inset-0 bg-black/54" />
-      <div className="wood-grain pointer-events-none fixed inset-x-0 bottom-0 h-[30vh] opacity-60" />
-      <div className="rain-layer pointer-events-none fixed inset-0 opacity-[0.1]" />
+      <div className="pointer-events-none fixed inset-0 bg-[url('/rooms/lobby-background.png')] bg-cover bg-center" />
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_48%_42%,rgba(255,190,112,0.08),transparent_34%),linear-gradient(180deg,rgba(2,4,5,0.18),rgba(2,4,5,0.62))]" />
+      <div className="pointer-events-none fixed inset-0 bg-black/18" />
     </>
   );
 }
