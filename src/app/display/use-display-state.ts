@@ -11,8 +11,9 @@ const emptyState: DisplayState = {
 };
 
 type PublicConfig = {
-  supabaseUrl: string;
-  supabaseAnonKey: string;
+  realtimeEnabled: boolean;
+  supabaseUrl: string | null;
+  supabaseAnonKey: string | null;
 };
 
 export function useDisplayState() {
@@ -59,6 +60,11 @@ export function useDisplayState() {
         }
 
         const config = (await response.json()) as PublicConfig;
+        if (!config.realtimeEnabled || !config.supabaseUrl || !config.supabaseAnonKey) {
+          setConnectionState("fallback");
+          return;
+        }
+
         supabaseBrowser = getSupabaseBrowser(config.supabaseUrl, config.supabaseAnonKey);
         channel = supabaseBrowser
           .channel("kiitos-work-room-display")

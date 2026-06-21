@@ -6,7 +6,17 @@ const ROOM_ORDER = ["編集", "勉強", "作業", "デザイン"];
 
 export async function getDisplayState(): Promise<DisplayState> {
   const now = new Date();
-  const supabaseAdmin = getSupabaseAdmin();
+  let supabaseAdmin: ReturnType<typeof getSupabaseAdmin>;
+
+  try {
+    supabaseAdmin = getSupabaseAdmin();
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("Missing required environment variable")) {
+      return getFallbackDisplayState(now);
+    }
+
+    throw error;
+  }
 
   const { data: rooms, error: roomsError } = await supabaseAdmin
     .from("rooms")
@@ -53,6 +63,20 @@ export async function getDisplayState(): Promise<DisplayState> {
     generatedAt: now.toISOString(),
     totalParticipants: displayRooms.reduce((sum, room) => sum + room.participants.length, 0),
     rooms: sortRooms(displayRooms)
+  };
+}
+
+function getFallbackDisplayState(now: Date): DisplayState {
+  const rooms: DisplayRoom[] = ROOM_ORDER.map((name) => ({
+    id: name,
+    name,
+    participants: []
+  }));
+
+  return {
+    generatedAt: now.toISOString(),
+    totalParticipants: 0,
+    rooms
   };
 }
 

@@ -7,13 +7,15 @@ export async function GET() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    return NextResponse.json(
-      { error: "Missing Supabase public environment variables." },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      realtimeEnabled: false,
+      supabaseUrl: null,
+      supabaseAnonKey: null
+    });
   }
 
   return NextResponse.json({
+    realtimeEnabled: true,
     supabaseUrl,
     supabaseAnonKey
   });
