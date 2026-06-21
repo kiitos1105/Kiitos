@@ -2,8 +2,7 @@ import { getSupabaseAdmin } from "./supabase";
 import { elapsedSecondsSince } from "./time";
 import type { ActiveSessionWithRoom, DisplayRoom, DisplayState } from "./types";
 import { ROOM_CONFIGS, getRoomConfig } from "./room-config";
-
-const MOCK_STARTED_AT = new Date(Date.now() - 42 * 60 * 1000).toISOString();
+import { getFallbackDisplayState } from "./work-room";
 
 export async function getDisplayState(): Promise<DisplayState> {
   const now = new Date();
@@ -30,7 +29,7 @@ export async function getDisplayState(): Promise<DisplayState> {
 
   const { data: sessions, error: sessionsError } = await supabaseAdmin
     .from("active_sessions")
-    .select("id,platform,platform_user_id,display_name,room_id,started_at,rooms(id,name)")
+    .select("id,platform,platform_user_id,display_name,room_id,seat_id,started_at,rooms(id,name)")
     .order("started_at", { ascending: true });
 
   if (sessionsError) {
@@ -54,7 +53,8 @@ export async function getDisplayState(): Promise<DisplayState> {
       platform: session.platform,
       displayName: session.display_name,
       startedAt: session.started_at,
-      elapsedSeconds: elapsedSecondsSince(session.started_at, now)
+      elapsedSeconds: elapsedSecondsSince(session.started_at, now),
+      seatId: session.seat_id ?? undefined
     });
   }
 
@@ -62,24 +62,6 @@ export async function getDisplayState(): Promise<DisplayState> {
     generatedAt: now.toISOString(),
     totalParticipants: displayRooms.reduce((sum, room) => sum + room.participants.length, 0),
     rooms: sortRooms(displayRooms)
-  };
-}
-
-function getFallbackDisplayState(now: Date): DisplayState {
-  const rooms: DisplayRoom[] = ROOM_CONFIGS.map((room, index) => ({
-    id: room.id,
-    name: room.name,
-    shortName: room.shortName,
-    description: room.description,
-    icon: room.icon,
-    mood: room.mood,
-    participants: createMockParticipants(room.id, index, now)
-  }));
-
-  return {
-    generatedAt: now.toISOString(),
-    totalParticipants: rooms.reduce((sum, room) => sum + room.participants.length, 0),
-    rooms
   };
 }
 
@@ -100,27 +82,9 @@ function createDisplayRoom(id: string, name: string): DisplayRoom {
     id,
     name: config.name ?? name,
     shortName: config.shortName,
-    description: config.description,
+    description: config.description ?? undefined,
     icon: config.icon,
     mood: config.mood,
     participants: []
   };
-}
-
-function createMockParticipants(roomId: string, roomIndex: number, now: Date) {
-  const sampleNames = [["Mika", "Sora"], ["Aoi"], ["Ren", "Nana"], ["Yuki", "Kai"], ["Noa"]];
-
-  return (sampleNames[roomIndex] ?? []).map((name, index) => {
-    const startedAt = new Date(
-      now.getTime() - (roomIndex * 18 + index * 11 + 24) * 60 * 1000
-    ).toISOString();
-
-    return {
-      id: `${roomId}-${name.toLowerCase()}`,
-      platform: index % 2 === 0 ? ("discord" as const) : ("youtube" as const),
-      displayName: name,
-      startedAt: roomIndex === 0 && index === 0 ? MOCK_STARTED_AT : startedAt,
-      elapsedSeconds: elapsedSecondsSince(startedAt, now)
-    };
-  });
 }

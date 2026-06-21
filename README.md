@@ -1,17 +1,40 @@
 # Kiitos Work Room
 
-OBS Browser Source で表示するオンライン作業部屋のMVPです。
+「部屋を選び、席を選び、毎日帰ってきたくなる」オンライン自習室/作業部屋です。
 
-今回の範囲:
+テーマ:
 
-- Next.js App Router
-- TypeScript
-- Tailwind CSS
-- Docker / Docker Compose
-- Supabase
-- OBS用 `/display` ページ
+- Apple × Nordic Cafe × Kiitos
+- 黒基調
+- 木目
+- 暖色ライト
+- ガラスUI
+- Lo-Fiカフェ
+- 夜の作業部屋
+- 雨
 
-Discord Bot と YouTube Bot はまだ含めていません。
+## Routes
+
+- `/display`: OBS用の全体表示
+- `/rooms/cafe`: Cafe Room
+- `/rooms/library`: Library Room
+- `/rooms/office`: Office Room
+- `/rooms/creator`: Creator Room
+- `/rooms/night`: Night Room
+- `/camera`: OBS用の定点カメラ巡回
+- `/admin`: 管理画面
+
+## Rooms
+
+将来 Discord / YouTube から入室しやすいように、room id は固定です。
+
+- `cafe`: Cafe Room
+- `library`: Library Room
+- `office`: Office Room
+- `creator`: Creator Room
+- `night`: Night Room
+
+席IDは `A1` から `C4` です。
 
 ## Setup
 
@@ -20,7 +43,7 @@ pnpm install
 cp .env.example .env.local
 ```
 
-`.env.local` を設定します。
+`.env.local`:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
@@ -28,7 +51,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_DISPLAY_BGM=Lo-Fi Rainy Desk
 NEXT_PUBLIC_DISPLAY_WEATHER=Tokyo · Light Rain
+ADMIN_PASSWORD=
+SESSION_WORKER_INTERVAL_MS=60000
 ```
+
+Supabase未設定でもダミーデータで動きます。
 
 ## Supabase
 
@@ -36,20 +63,17 @@ Supabase SQL Editor で `supabase/schema.sql` を実行してください。
 
 作成されるテーブル:
 
+- `users`
 - `rooms`
+- `seats`
 - `active_sessions`
+- `session_logs`
+- `warnings`
+- `bans`
+- `announcements`
+- `admin_actions`
 
-初期部屋と将来の入室ID:
-
-- `cafe`: Cafe Room
-- `library`: Library Room
-- `office`: Office Room
-- `creator`: Creator Room
-- `night`: Night Room
-
-`/display` は `active_sessions` を読み取り、部屋別の参加者と経過時間を表示します。
-
-`NEXT_PUBLIC_DISPLAY_BGM` と `NEXT_PUBLIC_DISPLAY_WEATHER` はOBS画面右側の表示テキストです。配信内容に合わせて自由に差し替えられます。
+`platform` は `discord` / `youtube` / `web` を想定しています。
 
 ## Development
 
@@ -57,28 +81,73 @@ Supabase SQL Editor で `supabase/schema.sql` を実行してください。
 pnpm dev
 ```
 
-OBS Browser Source:
+URL:
 
 ```text
 http://localhost:3000/display
+http://localhost:3000/camera
+http://localhost:3000/admin
 ```
 
-推奨サイズ:
+## Admin
 
-```text
-1920x1080
+`/admin` は `ADMIN_PASSWORD` による簡易認証です。
+
+MVPで用意している操作:
+
+- 現在の参加者一覧
+- 部屋ごとの参加者一覧
+- 席ごとの利用者一覧
+- 強制退出
+- 警告
+- BAN
+- 部屋移動
+- 席移動
+- 全体アナウンス
+- 部屋別アナウンス
+- ポモドーロ開始/停止
+- 部屋の有効/無効切り替え
+- 定点カメラの巡回秒数変更
+
+## Camera
+
+`/camera` はOBS向けの定点カメラモードです。
+
+デフォルトは7秒巡回です。Adminから以下に変更できます。
+
+- 5秒
+- 7秒
+- 10秒
+- 15秒
+- 30秒
+
+## Background Architecture
+
+将来の常駐処理に備えて、構成を分けています。
+
+- `web`: Next.js
+- `worker`: session timer / cleanup / logs
+- `bot`: Discord / YouTube adapter
+
+起動:
+
+```bash
+pnpm worker
+pnpm bot
 ```
 
 ## Docker
+
+Webのみ:
 
 ```bash
 docker compose up --build
 ```
 
-ブラウザで開くURL:
+Worker/Botを含める:
 
-```text
-http://localhost:3000/display
+```bash
+docker compose --profile worker --profile bot up --build
 ```
 
 ## Quality Check
@@ -93,19 +162,4 @@ pnpm build
 
 ```bash
 pnpm format
-```
-
-## Structure
-
-```text
-src/app/display/page.tsx              OBS display page
-src/app/display/use-display-state.ts  Supabase Realtime subscription
-src/app/api/config/route.ts           Public Supabase config API
-src/app/api/sessions/route.ts         Display data API
-src/lib/display-state.ts              Display data shaping
-src/lib/supabase.ts                   Server Supabase client
-src/lib/supabase-browser.ts           Browser Supabase client
-supabase/schema.sql                   Supabase schema
-Dockerfile
-compose.yaml
 ```

@@ -8,6 +8,7 @@ export type DisplayParticipant = {
   displayName: string;
   startedAt: string;
   elapsedSeconds: number;
+  seatId?: string;
 };
 
 export type DisplayRoom = {

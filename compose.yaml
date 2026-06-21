@@ -7,3 +7,21 @@ services:
     ports:
       - "3000:3000"
     restart: unless-stopped
+
+  worker:
+    build: .
+    command: pnpm worker
+    env_file:
+      - .env.local
+    restart: unless-stopped
+    profiles:
+      - worker
+
+  bot:
+    build: .
+    command: pnpm bot
+    env_file:
+      - .env.local
+    restart: unless-stopped
+    profiles:
+      - bot

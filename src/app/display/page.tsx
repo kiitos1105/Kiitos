@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { formatDuration } from "@/lib/time";
 import type { DisplayParticipant, DisplayRoom } from "@/lib/types";
 import { getRoomConfig } from "@/lib/room-config";
@@ -206,6 +207,12 @@ function RoomCard({ room, now }: { room: DisplayRoom; now: Date }) {
       />
       <div className={`absolute inset-x-6 top-0 h-1.5 rounded-b-full ${accent.line}`} />
 
+      <Link
+        className="absolute inset-0 z-20"
+        href={`/rooms/${config.id}`}
+        aria-label={`${config.name}を開く`}
+      />
+
       <header className="relative z-10 flex items-start justify-between gap-4 p-5">
         <div>
           <p className="text-xs font-black uppercase tracking-normal text-stone-200/45">
@@ -270,7 +277,7 @@ function ParticipantRow({ participant, now }: { participant: DisplayParticipant;
           {participant.displayName}
         </strong>
         <p className="mt-1 text-xs font-black uppercase tracking-normal text-stone-300/48">
-          {participant.platform}
+          {participant.seatId ?? "--"} · {participant.platform}
         </p>
       </div>
       <time className="font-mono text-xl font-black text-amber-100">{formatDuration(elapsed)}</time>

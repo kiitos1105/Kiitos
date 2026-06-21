@@ -1,4 +1,4 @@
-export type Platform = "youtube" | "discord";
+export type Platform = "youtube" | "discord" | "web";
 
 export type RoomRow = {
   id: string;
@@ -13,6 +13,7 @@ export type ActiveSessionRow = {
   platform_user_id: string;
   display_name: string;
   room_id: string;
+  seat_id: string | null;
   started_at: string;
 };
 
@@ -42,6 +43,7 @@ export type Database = {
           platform_user_id: string;
           display_name: string;
           room_id: string;
+          seat_id?: string | null;
           started_at?: string;
         };
         Update: Partial<ActiveSessionRow>;
