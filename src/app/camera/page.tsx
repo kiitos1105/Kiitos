@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { WeatherCities } from "@/components/WeatherCities";
 import { getRoomDetails } from "@/lib/work-room";
 import { getRoomConfig } from "@/lib/room-config";
 import { formatDuration } from "@/lib/time";
-import { getRotatingWeather } from "@/lib/weather";
 
 export default function CameraPage() {
   const rooms = useMemo(() => getRoomDetails(), []);
@@ -21,7 +21,6 @@ export default function CameraPage() {
   );
   const activeRoom = displayRooms[activeIndex % displayRooms.length];
   const config = getRoomConfig(activeRoom.roomId);
-  const weather = getRotatingWeather(new Date());
   const totalFocus = activeRoom.participants.reduce(
     (sum, participant) => sum + participant.elapsedSeconds,
     0
@@ -86,14 +85,17 @@ export default function CameraPage() {
               </span>
             </header>
 
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <CameraMetric label="参加者" value={`${activeRoom.participants.length}`} />
               <CameraMetric label="集中時間" value={formatDuration(totalFocus)} />
               <CameraMetric label="BGM" value={activeRoom.bgm} />
-              <CameraMetric
-                label="天気"
-                value={`${weather.area} ${weather.temperature} ${weather.condition}`}
-              />
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-black/28 p-4">
+              <p className="mb-3 text-xs font-black uppercase tracking-normal text-stone-300/45">
+                Weather
+              </p>
+              <WeatherCities compact />
             </div>
 
             <div className="grid grid-cols-5 gap-3">

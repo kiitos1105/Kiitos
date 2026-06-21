@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { WeatherCities } from "@/components/WeatherCities";
 import { formatDuration } from "@/lib/time";
 import type { DisplayParticipant, DisplayRoom } from "@/lib/types";
 import { getRoomConfig } from "@/lib/room-config";
-import { getRotatingWeather } from "@/lib/weather";
 import { useDisplayState } from "./use-display-state";
 
 const POMODORO_WORK_SECONDS = 25 * 60;
@@ -17,7 +17,6 @@ export default function DisplayPage() {
   const [, setTick] = useState(0);
   const now = new Date();
   const pomodoro = getPomodoroState(now);
-  const weather = getRotatingWeather(now);
   const totalFocusSeconds = useMemo(
     () =>
       state.rooms.reduce(
@@ -102,12 +101,15 @@ export default function DisplayPage() {
               value={process.env.NEXT_PUBLIC_DISPLAY_BGM ?? "Lo-Fi Rainy Desk"}
               sub="soft piano / vinyl noise / 72 bpm"
             />
-            <CafeCard
-              title="Weather"
-              label="日本の天気"
-              value={`${weather.area} · ${weather.condition}`}
-              sub={`${weather.temperature} / ${weather.note}`}
-            />
+            <div className="glass-panel rounded-[2rem] p-5">
+              <p className="text-xs font-black uppercase tracking-normal text-amber-100/60">
+                Weather
+              </p>
+              <h3 className="mt-2 text-2xl font-black">日本5大都市</h3>
+              <div className="mt-4">
+                <WeatherCities compact />
+              </div>
+            </div>
             <div className="glass-panel wood-panel relative overflow-hidden rounded-[2rem] p-6">
               <div className="relative z-10">
                 <p className="text-xs font-black uppercase tracking-normal text-amber-100/60">

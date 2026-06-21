@@ -213,6 +213,14 @@ body::selection {
   min-width: 5.25rem;
 }
 
+.home-background {
+  background-image: url("/images/home-bg.jpeg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
 .lobby-nav {
   display: flex;
   align-items: center;
@@ -293,6 +301,41 @@ body::selection {
   gap: 0.75rem;
 }
 
+.weather-strip {
+  position: absolute;
+  right: 0;
+  top: 12rem;
+  z-index: 15;
+  display: flex;
+  width: min(34rem, 42vw);
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 1.45rem;
+  padding: 0.75rem;
+}
+
+.weather-cities {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(5.25rem, 1fr));
+  gap: 0.5rem;
+  overflow-x: auto;
+}
+
+.weather-cities-compact {
+  grid-template-columns: repeat(5, minmax(4.75rem, 1fr));
+}
+
+.weather-city {
+  display: flex;
+  min-width: 5.25rem;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  background: rgba(0, 0, 0, 0.26);
+  padding: 0.55rem;
+}
+
 .lobby-room-grid {
   display: grid;
   gap: 1rem;
@@ -352,6 +395,11 @@ body::selection {
     position: static;
     width: 100%;
     grid-template-columns: 1fr;
+  }
+
+  .weather-strip {
+    position: static;
+    width: 100%;
   }
 
   .focus-panel,

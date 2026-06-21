@@ -45,6 +45,12 @@
 
 ## Room Images
 
+Home/Lobby背景:
+
+```text
+public/images/home-bg.jpeg
+```
+
 部屋画像は以下のパスに置く想定です。
 
 ```text
@@ -101,7 +107,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_DISPLAY_BGM=Lo-Fi Rainy Desk
 NEXT_PUBLIC_DISPLAY_WEATHER=Tokyo · Light Rain
-ADMIN_PASSWORD=change-me
+ADMIN_PASSWORD=Takemasa1105
 SESSION_WORKER_INTERVAL_MS=60000
 ```
 
@@ -143,7 +149,8 @@ http://localhost:3000/admin
 
 ## Admin
 
-`/admin/login` は `ADMIN_PASSWORD` による簡易認証です。ログイン後は `/admin/dashboard`
+`/admin/login` は `ADMIN_PASSWORD` による簡易認証です。ローカルMVPのデフォルトは
+`Takemasa1105` です。ログイン後は `/admin/dashboard`
 へ移動し、画面上部に `Admin Mode` が表示されます。通常画面の右下にある `Admin`
 ボタンからログインできます。
 
@@ -177,16 +184,13 @@ http://localhost:3000/admin/camera
 
 ## Weather
 
-`/lobby` `/display` `/camera` では日本各地のダミー天気を1〜2分ごとに切り替えて表示します。
+`/lobby` `/display` `/camera` では日本5大都市のダミー天気を一括表示します。
 
-- 北海道
-- 仙台
 - 東京
 - 名古屋
 - 大阪
-- 広島
 - 福岡
-- 沖縄
+- 札幌
 
 ## Camera
 

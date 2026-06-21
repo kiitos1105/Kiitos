@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { HeaderNavigation } from "@/components/HeaderNavigation";
+import { WeatherCities } from "@/components/WeatherCities";
 import { getRoomConfig } from "@/lib/room-config";
 import { formatDuration } from "@/lib/time";
 import { getRotatingWeather } from "@/lib/weather";
@@ -20,6 +21,7 @@ export default function LobbyPage() {
   const rooms = useMemo(() => getRoomDetails(), []);
   const [focusPanelOpen, setFocusPanelOpen] = useState(true);
   const [comingSoon, setComingSoon] = useState<string | null>(null);
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [discordUser] = useState<DiscordUser | null>(null);
   const [, setTick] = useState(0);
   const now = new Date();
@@ -110,6 +112,13 @@ export default function LobbyPage() {
             <StatusTile icon="◷" label="Time" value={formatClock(now)} sub="Japan time" />
           </aside>
 
+          <section className="weather-strip glass-panel">
+            <p className="shrink-0 text-xs font-black uppercase tracking-normal text-amber-100/60">
+              Weather
+            </p>
+            <WeatherCities compact />
+          </section>
+
           <section className="lobby-room-grid">
             {rooms.map((room, index) => {
               const config = getRoomConfig(room.roomId);
@@ -167,7 +176,7 @@ export default function LobbyPage() {
             <button
               className="rounded-full border border-white/10 bg-black/28 px-5 py-3 text-sm font-black text-stone-100/78 backdrop-blur-xl"
               key={item}
-              onClick={() => setComingSoon(item)}
+              onClick={() => setActiveMenu(item)}
               type="button"
             >
               {item}
@@ -178,6 +187,13 @@ export default function LobbyPage() {
 
       {comingSoon ? (
         <ComingSoonModal label={comingSoon} onClose={() => setComingSoon(null)} />
+      ) : null}
+      {activeMenu ? (
+        <MenuModal
+          label={activeMenu}
+          onClose={() => setActiveMenu(null)}
+          totalFocusSeconds={totalFocusSeconds}
+        />
       ) : null}
     </main>
   );
@@ -332,12 +348,102 @@ function ComingSoonModal({ label, onClose }: { label: string; onClose: () => voi
   );
 }
 
+function MenuModal({
+  label,
+  totalFocusSeconds,
+  onClose
+}: {
+  label: string;
+  totalFocusSeconds: number;
+  onClose: () => void;
+}) {
+  const content = getMenuContent(label, totalFocusSeconds);
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/58 p-6 backdrop-blur-xl">
+      <section className="glass-panel max-h-[82vh] w-full max-w-3xl overflow-auto rounded-[2rem] p-7">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-black uppercase text-amber-100/60">Kiitos Menu</p>
+            <h2 className="mt-3 text-4xl font-black">{label}</h2>
+          </div>
+          <button
+            className="rounded-full border border-white/10 bg-white/8 px-4 py-2 font-black"
+            onClick={onClose}
+            type="button"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="mt-6 grid gap-3">
+          {content.map((item) => (
+            <article
+              className="rounded-3xl border border-white/10 bg-black/24 p-4"
+              key={item.title}
+            >
+              <h3 className="text-xl font-black text-amber-100">{item.title}</h3>
+              <p className="mt-2 text-sm font-bold leading-6 text-stone-200/65">{item.body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function getMenuContent(label: string, totalFocusSeconds: number) {
+  const focus = formatDuration(totalFocusSeconds);
+  const map: Record<string, { title: string; body: string }[]> = {
+    お知らせ: [
+      {
+        title: "アップデート情報",
+        body: "座席手動調整モードとDiscord専用ログイン導線を追加しました。"
+      },
+      { title: "イベント告知", body: "週末にCafe Roomで朝活フォーカス会を予定しています。" },
+      { title: "メンテナンス情報", body: "現在メンテナンス予定はありません。" }
+    ],
+    ランキング: [
+      { title: "今日の集中時間ランキング", body: `みんなの合計集中時間は ${focus} です。` },
+      { title: "今週の集中時間ランキング", body: "1位 Mika / 2位 Sora / 3位 Aoi" },
+      { title: "部屋別ランキング", body: "Cafe Room と Creator Room が人気です。" }
+    ],
+    バッジ: [
+      { title: "Founder Badge", body: "初期メンバーに付与される記念バッジです。" },
+      { title: "Cafe Lover", body: "Cafe Roomで集中時間を積み重ねると獲得できます。" },
+      { title: "Night Owl", body: "Night Roomで深夜作業を続ける人向けです。" },
+      { title: "Focus Master", body: "長時間集中を達成した人に付与されます。" },
+      { title: "Beta Tester", body: "Kiitos Work Roomの改善に参加した人向けです。" }
+    ],
+    マイページ: [
+      {
+        title: "Discordユーザー情報",
+        body: "Discord OAuth接続後、Discord IDをuser_idとして紐づけます。"
+      },
+      { title: "今日の集中時間", body: "4:23:00" },
+      { title: "累計集中時間", body: "128:40:00" },
+      { title: "所属部屋", body: "Cafe Room / Night Room" },
+      { title: "獲得バッジ", body: "Founder Badge, Cafe Lover, Beta Tester" }
+    ],
+    設定: [
+      { title: "BGM表示", body: "ON" },
+      { title: "雨アニメ", body: "OFF。ロビーでは動く線を表示しません。" },
+      { title: "通知", body: "ON" },
+      { title: "表示テーマ", body: "Apple × Nordic Cafe × Kiitos" },
+      { title: "Admin導線", body: "右下のAdminボタンから /admin/login に移動できます。" },
+      { title: "Discord連携状態", body: "未接続。メール登録は使いません。" }
+    ]
+  };
+
+  return map[label] ?? [];
+}
+
 function LobbyBackground() {
   return (
     <>
-      <div className="pointer-events-none fixed inset-0 bg-[url('/rooms/lobby-background.png')] bg-cover bg-center" />
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_48%_42%,rgba(255,190,112,0.08),transparent_34%),linear-gradient(180deg,rgba(2,4,5,0.18),rgba(2,4,5,0.62))]" />
-      <div className="pointer-events-none fixed inset-0 bg-black/18" />
+      <div className="home-background pointer-events-none fixed inset-0" />
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_48%_42%,rgba(255,190,112,0.08),transparent_34%),linear-gradient(180deg,rgba(2,4,5,0.12),rgba(2,4,5,0.45))]" />
+      <div className="pointer-events-none fixed inset-0 bg-black/35" />
     </>
   );
 }
