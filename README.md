@@ -15,6 +15,7 @@
 
 ## Routes
 
+- `/lobby`: Kiitos Work Roomの入口。部屋画像カードから入室
 - `/display`: OBS用の全体表示
 - `/rooms/cafe`: Cafe Room
 - `/rooms/library`: Library Room
@@ -35,6 +36,24 @@
 - `night`: Night Room
 
 席IDは `A1` から `C4` です。
+
+## Room Images
+
+部屋画像は以下のパスに置く想定です。
+
+```text
+public/rooms/cafe.jpg
+public/rooms/library.jpg
+public/rooms/office.jpg
+public/rooms/creator.jpg
+public/rooms/night.jpg
+```
+
+画像が未配置でもグラデーションのフォールバック背景で動きます。画像を追加すると、`/lobby`
+の部屋カードと `/rooms/[roomId]` の部屋背景にそのまま反映されます。
+
+`/rooms/[roomId]` では、部屋画像の上に席ボタンを絶対配置しています。席をクリックすると右側に
+席詳細が出て、「この席に座る」で自分の席として表示されます。
 
 ## Setup
 
@@ -84,7 +103,9 @@ pnpm dev
 URL:
 
 ```text
+http://localhost:3000/lobby
 http://localhost:3000/display
+http://localhost:3000/rooms/cafe
 http://localhost:3000/camera
 http://localhost:3000/admin
 ```
