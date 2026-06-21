@@ -6,6 +6,23 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/lib/**/*.{js,ts,jsx,tsx,mdx}"
   ],
+  safelist: [
+    "from-amber-200/35",
+    "from-emerald-200/28",
+    "from-slate-200/24",
+    "from-cyan-200/28",
+    "from-indigo-200/30",
+    "bg-[#b8834d]",
+    "bg-[#6f7b55]",
+    "bg-[#7e8b94]",
+    "bg-[#4e91a3]",
+    "bg-[#6867a6]",
+    "text-amber-100",
+    "text-emerald-100",
+    "text-slate-100",
+    "text-cyan-100",
+    "text-indigo-100"
+  ],
   theme: {
     extend: {
       colors: {

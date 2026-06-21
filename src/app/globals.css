@@ -93,6 +93,108 @@ body::selection {
     0 0 38px rgba(253, 230, 138, 0.12);
 }
 
+.room-page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  color: rgb(250, 250, 249);
+  background:
+    radial-gradient(circle at 18% 10%, rgba(255, 214, 158, 0.18), transparent 30%),
+    linear-gradient(180deg, rgb(10, 17, 20), rgb(4, 7, 8));
+}
+
+.room-shell {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  width: 100%;
+  max-width: 1800px;
+  min-height: 100vh;
+  padding: 1.25rem;
+  margin: 0 auto;
+  gap: 1.25rem;
+  grid-template-rows: auto 1fr;
+}
+
+.room-header {
+  border-radius: 2rem;
+}
+
+.room-stage {
+  display: grid;
+  min-height: 0;
+  gap: 1.25rem;
+}
+
+.room-map {
+  position: relative;
+  min-height: 620px;
+  overflow: hidden;
+  border-radius: 2.5rem;
+}
+
+.room-map-image,
+.room-map-vignette {
+  position: absolute;
+  inset: 0;
+}
+
+.room-map-image {
+  background-position: center;
+  background-size: cover;
+}
+
+.room-map-vignette {
+  background:
+    radial-gradient(circle at 50% 42%, transparent 0 38%, rgba(0, 0, 0, 0.34) 70%),
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.48),
+      transparent 28%,
+      transparent 72%,
+      rgba(0, 0, 0, 0.56)
+    );
+}
+
+.room-map-copy {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  max-width: 32rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 2rem;
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(24px);
+}
+
+.room-map-footer {
+  position: absolute;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  left: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.75rem;
+  background: rgba(0, 0, 0, 0.36);
+  backdrop-filter: blur(24px);
+}
+
+.room-side {
+  display: grid;
+  min-height: 0;
+  gap: 1.25rem;
+}
+
+@media (min-width: 1280px) {
+  .room-stage {
+    grid-template-columns: minmax(0, 1fr) 420px;
+  }
+
+  .room-side {
+    grid-template-rows: auto 1fr;
+  }
+}
+
 @keyframes rain-fall {
   from {
     transform: translate3d(0, -120px, 0);

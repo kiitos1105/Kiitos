@@ -40,11 +40,11 @@ export default function RoomPage() {
   const availableSeats = room.seats.filter((seat) => seat.status === "available").length;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-cafe-950 text-stone-50">
+    <main className="room-page relative min-h-screen overflow-hidden bg-cafe-950 text-stone-50">
       <RoomImageBackground roomId={room.roomId} image={config.image} />
 
-      <section className="relative z-10 mx-auto grid min-h-screen w-full max-w-[1800px] grid-rows-[auto_1fr] gap-5 px-5 py-5 lg:px-8">
-        <header className="glass-panel rounded-[2rem] px-5 py-4">
+      <section className="room-shell relative z-10 mx-auto grid min-h-screen w-full max-w-[1800px] grid-rows-[auto_1fr] gap-5 px-5 py-5 lg:px-8">
+        <header className="room-header glass-panel rounded-[2rem] px-5 py-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <Link
@@ -72,21 +72,21 @@ export default function RoomPage() {
           </div>
         </header>
 
-        <section className="grid min-h-0 gap-5 xl:grid-cols-[1fr_420px]">
-          <div className="glass-panel relative min-h-[620px] overflow-hidden rounded-[2.5rem]">
+        <section className="room-stage grid min-h-0 gap-5 xl:grid-cols-[1fr_420px]">
+          <div className="room-map glass-panel relative min-h-[620px] overflow-hidden rounded-[2.5rem]">
             <div
-              className={`absolute inset-0 bg-cover bg-center ${roomFallbackClass(room.roomId)}`}
+              className={`room-map-image absolute inset-0 bg-cover bg-center ${roomFallbackClass(room.roomId)}`}
               style={{
                 backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.48)), url(${config.image})`
               }}
             />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,transparent_0_38%,rgba(0,0,0,0.34)_70%),linear-gradient(90deg,rgba(0,0,0,0.48),transparent_28%,transparent_72%,rgba(0,0,0,0.56))]" />
+            <div className="room-map-vignette absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,transparent_0_38%,rgba(0,0,0,0.34)_70%),linear-gradient(90deg,rgba(0,0,0,0.48),transparent_28%,transparent_72%,rgba(0,0,0,0.56))]" />
             <div
               className={`absolute inset-x-10 top-0 h-1.5 rounded-b-full ${config.accent.line}`}
             />
             <div className="rain-layer pointer-events-none absolute inset-0 opacity-10" />
 
-            <div className="absolute left-6 top-6 max-w-lg rounded-[2rem] border border-white/12 bg-black/30 p-5 shadow-2xl backdrop-blur-2xl">
+            <div className="room-map-copy absolute left-6 top-6 max-w-lg rounded-[2rem] border border-white/12 bg-black/30 p-5 shadow-2xl backdrop-blur-2xl">
               <p className="text-xs font-black uppercase tracking-normal text-amber-100/65">
                 Choose your seat
               </p>
@@ -125,7 +125,7 @@ export default function RoomPage() {
               }}
             />
 
-            <div className="absolute bottom-5 left-5 right-5 flex flex-wrap items-center justify-between gap-3 rounded-[1.75rem] border border-white/12 bg-black/36 p-4 backdrop-blur-2xl">
+            <div className="room-map-footer absolute bottom-5 left-5 right-5 flex flex-wrap items-center justify-between gap-3 rounded-[1.75rem] border border-white/12 bg-black/36 p-4 backdrop-blur-2xl">
               <div>
                 <p className="text-xs font-black uppercase tracking-normal text-stone-300/45">
                   Room rule
@@ -141,7 +141,7 @@ export default function RoomPage() {
             </div>
           </div>
 
-          <aside className="grid min-h-0 gap-5 xl:grid-rows-[auto_1fr]">
+          <aside className="room-side grid min-h-0 gap-5 xl:grid-rows-[auto_1fr]">
             <SeatDetail
               mySeatId={mySeatId}
               onEnter={() => setMySeatId(selectedSeat.id)}
