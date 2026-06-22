@@ -296,12 +296,14 @@ export default function LobbyPage() {
 
           <section className="mx-auto w-full max-w-3xl rounded-[2rem] border border-amber-100/18 bg-black/26 p-4 text-center shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-5">
             <p className="text-xs font-black uppercase tracking-normal text-amber-100/60">
-              ✨ Premium
+              ✨ Custom Room
             </p>
             <h2 className="mt-2 text-2xl font-black text-amber-50 sm:text-3xl">
               Create Your Own Room
             </h2>
-            <p className="mt-2 text-sm font-bold text-stone-200/58">あなただけの作業空間を作成</p>
+            <p className="mt-2 text-sm font-bold text-stone-200/58">
+              Freeは1日1回Private Room、Premium Demoは無制限
+            </p>
             {premium ? (
               <Link
                 className="mt-4 inline-flex rounded-full border border-amber-100/35 bg-amber-100 px-6 py-3 text-sm font-black text-stone-950 shadow-[0_0_44px_rgba(253,230,138,0.14)] transition hover:-translate-y-0.5"
@@ -310,13 +312,12 @@ export default function LobbyPage() {
                 ＋ Create Your Own Room
               </Link>
             ) : (
-              <button
+              <Link
                 className="mt-4 rounded-full border border-white/12 bg-black/34 px-6 py-3 text-sm font-black text-stone-100/82 backdrop-blur-xl transition hover:border-amber-100/35 hover:bg-amber-100/10"
-                onClick={() => setPremiumModalOpen(true)}
-                type="button"
+                href="/custom-room/new"
               >
-                ＋ Create Your Own Room
-              </button>
+                ＋ Free Private Room
+              </Link>
             )}
           </section>
         </section>

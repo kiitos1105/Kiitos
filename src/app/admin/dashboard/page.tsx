@@ -15,6 +15,11 @@ const MENU = [
     href: "/admin/custom-rooms",
     description: "Premiumユーザーの作成部屋を編集・削除・公開停止。"
   },
+  {
+    title: "招待コード管理",
+    href: "/admin/invites",
+    description: "β版Premium招待コードを作成・管理。"
+  },
   { title: "警告/BAN", href: "/admin/users", description: "荒らし対策と操作履歴の記録。" },
   { title: "バッジ管理", href: "/admin/badges", description: "バッジ作成、付与、剥奪、条件編集。" },
   { title: "称号管理", href: "/admin/titles", description: "称号作成、装備候補、手動付与と剥奪。" },

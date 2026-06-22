@@ -3,22 +3,34 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { grantBadge, grantTitle, saveUserProfile, getUserProfile } from "@/lib/badges-client";
-import { getCurrentPlan, setCurrentPlan, type Plan } from "@/lib/premium-client";
+import { getCurrentPlan, grantPremiumDemo, setCurrentPlan, type Plan } from "@/lib/premium-client";
 
 const PLANS = [
   {
     id: "free",
     name: "Free",
     price: "¥0",
-    description: "既存の公開ルームで作業できます。",
-    features: ["公開ルーム入室", "座席選択", "集中時間表示", "OBS表示の閲覧"]
+    description: "公式ルームと1日1回のPrivate Roomで作業できます。",
+    features: [
+      "公式ルーム参加",
+      "集中時間記録",
+      "ランキング参加",
+      "プライベートルーム 1日1回作成可能"
+    ]
   },
   {
     id: "premium",
-    name: "Premium",
+    name: "Premium Demo",
     price: "Demo",
-    description: "Custom Open Roomを作って運営できます。",
-    features: ["Custom Room作成", "部屋編集", "公開/非公開", "Premiumバッジ"]
+    description: "β版では招待制またはAdmin手動付与で利用できます。",
+    features: [
+      "カスタムオープンルーム作成",
+      "プライベートルーム無制限",
+      "ルーム背景変更",
+      "BGM変更",
+      "参加者管理",
+      "Premiumバッジ"
+    ]
   }
 ] as const;
 
@@ -31,7 +43,7 @@ export default function PricingPage() {
   }, []);
 
   function activatePremium() {
-    setCurrentPlan("premium");
+    grantPremiumDemo("pricing-development");
     grantBadge("premium", "pricing-demo");
     grantTitle("premium-member", "pricing-demo");
     saveUserProfile({ ...getUserProfile(), plan: "premium" });
@@ -58,7 +70,7 @@ export default function PricingPage() {
           </p>
           <h1 className="mt-3 text-6xl font-black">Pricing</h1>
           <p className="mx-auto mt-4 max-w-2xl text-sm font-bold leading-6 text-stone-200/62">
-            今は決済なしのDemoです。Stripe導入時はこのPremium判定を課金状態へ置き換えます。
+            現在β版のため、Premiumは招待制です。本決済はまだ実行しません。
           </p>
           <div className="mt-5 inline-flex rounded-full border border-amber-100/20 bg-amber-100/10 px-5 py-2 text-sm font-black text-amber-100">
             現在: {currentPlan === "premium" ? "Premium" : "Free"}
@@ -108,10 +120,12 @@ export default function PricingPage() {
         <div className="glass-panel flex flex-wrap items-center justify-between gap-4 rounded-[2rem] p-5">
           <div>
             <p className="font-black text-amber-100">
-              {selectedPlan === "premium" ? "PremiumをDemoで有効化します。" : "Freeへ戻します。"}
+              {selectedPlan === "premium"
+                ? "現在β版のため、Premiumは招待制です。"
+                : "Freeプランは1日1回Private Roomを作れます。"}
             </p>
             <p className="mt-1 text-sm font-bold text-stone-200/55">
-              状態はこのブラウザのlocalStorageに保存されます。
+              招待コードは /redeem で入力できます。開発用Demoボタンも残しています。
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -121,7 +135,7 @@ export default function PricingPage() {
                 onClick={activatePremium}
                 type="button"
               >
-                Premiumになる（Demo）
+                Premiumになる（Demo / 開発用）
               </button>
             ) : (
               <button
@@ -132,6 +146,12 @@ export default function PricingPage() {
                 Freeに戻す
               </button>
             )}
+            <Link
+              className="rounded-2xl border border-white/12 bg-black/28 px-6 py-4 font-black"
+              href="/redeem"
+            >
+              招待コード入力
+            </Link>
             <Link
               className="rounded-2xl border border-white/12 bg-black/28 px-6 py-4 font-black"
               href="/lobby"

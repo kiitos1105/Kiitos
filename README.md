@@ -37,6 +37,7 @@
 - `/friends`: フレンド一覧、申請、ブロック、一緒に参加
 - `/certificate`: 集中証明書の作成と保存
 - `/pricing`: Demo Premium
+- `/redeem`: 招待コード入力
 - `/custom-room/new`: Premium用Custom Open Room作成
 
 ## Rooms
@@ -124,28 +125,71 @@ NEXTAUTH_URL=http://localhost:3000
 DISCORD_BOT_TOKEN=
 YOUTUBE_API_KEY=
 YOUTUBE_LIVE_CHAT_ID=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+NEXT_PUBLIC_STRIPE_PRICE_ID_PREMIUM=
 ```
 
 Supabase未設定でもダミーデータで動きます。
 
 ## Environment Variables
 
-| Name | Required | Used by | Description |
-| --- | --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Production | Web | Supabase project URL. |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production | Web | Supabase anon key for browser reads/realtime. |
-| `SUPABASE_SERVICE_ROLE_KEY` | Production/Admin | API/Worker | Server-side Supabase writes. Never expose publicly. |
-| `ADMIN_PASSWORD` | Yes | Web/Admin | Simple admin password. Local MVP default is `1`. |
-| `NEXT_PUBLIC_DISPLAY_BGM` | No | Display | Default OBS BGM label. |
-| `NEXT_PUBLIC_DISPLAY_WEATHER` | No | Display | Default OBS weather label. |
-| `SESSION_WORKER_INTERVAL_MS` | No | Worker | Cleanup/log worker interval. |
-| `DISCORD_CLIENT_ID` | Discord OAuth | Web/Auth | Discord OAuth application client ID. |
-| `DISCORD_CLIENT_SECRET` | Discord OAuth | Web/Auth | Discord OAuth client secret. |
-| `NEXTAUTH_SECRET` | Discord OAuth | Web/Auth | Auth session secret. Generate a long random value. |
-| `NEXTAUTH_URL` | Discord OAuth | Web/Auth | Local: `http://localhost:3000`; production: public Vercel URL. |
-| `DISCORD_BOT_TOKEN` | Bot | Railway/Bot | Discord bot token for slash commands. |
-| `YOUTUBE_API_KEY` | Bot | Railway/Bot | YouTube Live Chat API key. |
-| `YOUTUBE_LIVE_CHAT_ID` | Bot | Railway/Bot | YouTube live chat id when using bot adapter. |
+| Name                                  | Required         | Used by     | Description                                                    |
+| ------------------------------------- | ---------------- | ----------- | -------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`            | Production       | Web         | Supabase project URL.                                          |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`       | Production       | Web         | Supabase anon key for browser reads/realtime.                  |
+| `SUPABASE_SERVICE_ROLE_KEY`           | Production/Admin | API/Worker  | Server-side Supabase writes. Never expose publicly.            |
+| `ADMIN_PASSWORD`                      | Yes              | Web/Admin   | Simple admin password. Local MVP default is `1`.               |
+| `NEXT_PUBLIC_DISPLAY_BGM`             | No               | Display     | Default OBS BGM label.                                         |
+| `NEXT_PUBLIC_DISPLAY_WEATHER`         | No               | Display     | Default OBS weather label.                                     |
+| `SESSION_WORKER_INTERVAL_MS`          | No               | Worker      | Cleanup/log worker interval.                                   |
+| `DISCORD_CLIENT_ID`                   | Discord OAuth    | Web/Auth    | Discord OAuth application client ID.                           |
+| `DISCORD_CLIENT_SECRET`               | Discord OAuth    | Web/Auth    | Discord OAuth client secret.                                   |
+| `NEXTAUTH_SECRET`                     | Discord OAuth    | Web/Auth    | Auth session secret. Generate a long random value.             |
+| `NEXTAUTH_URL`                        | Discord OAuth    | Web/Auth    | Local: `http://localhost:3000`; production: public Vercel URL. |
+| `DISCORD_BOT_TOKEN`                   | Bot              | Railway/Bot | Discord bot token for slash commands.                          |
+| `YOUTUBE_API_KEY`                     | Bot              | Railway/Bot | YouTube Live Chat API key.                                     |
+| `YOUTUBE_LIVE_CHAT_ID`                | Bot              | Railway/Bot | YouTube live chat id when using bot adapter.                   |
+| `STRIPE_SECRET_KEY`                   | Future           | Payment     | Future Stripe secret key. Beta does not execute payments.      |
+| `STRIPE_WEBHOOK_SECRET`               | Future           | Payment     | Future Stripe webhook secret.                                  |
+| `NEXT_PUBLIC_STRIPE_PRICE_ID_PREMIUM` | Future           | Payment     | Future Premium price id.                                       |
+
+## Beta Premium / Payment Policy
+
+決済会社とはまだ契約していない前提のため、β版では本決済を実行しません。
+
+Premium Demoの付与方法:
+
+- `/pricing` の `Premiumになる（Demo / 開発用）`
+- `/redeem` の招待コード入力
+- `/admin/users` のAdmin手動付与
+
+Freeプラン:
+
+- 公式ルーム参加
+- 集中時間記録
+- ランキング参加
+- Private Roomを1日1回作成可能
+
+Premium Demo:
+
+- Custom Open Room作成
+- Private Room無制限
+- ルーム背景変更
+- BGM変更
+- 参加者管理
+- Premiumバッジ
+
+Free Private Room制限:
+
+- 1ユーザーにつき1日1回
+- `private` のみ作成可能
+- 最大5人
+- 招待コード/招待リンクで友達を呼べる設計
+- 24時間後に自動終了想定、または作成者/Adminが削除
+
+将来的にStripe / STORES / PayPayへ差し替える場合は、現在の `Plan` / `Premium Demo`
+判定を決済プロバイダーの課金状態へ置き換えます。
 
 ## Supabase
 

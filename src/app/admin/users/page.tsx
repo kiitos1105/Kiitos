@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AdminGuard } from "@/components/AdminGuard";
-import { getUserProfile } from "@/lib/badges-client";
+import { getUserProfile, grantBadge, grantTitle, saveUserProfile } from "@/lib/badges-client";
 import { getEngagementProfile, saveEngagementProfile } from "@/lib/engagement-client";
 import {
   FOCUS_TREE_STAGES,
@@ -11,6 +11,7 @@ import {
   getLevelProgress,
   setLevelProfile
 } from "@/lib/level-client";
+import { setCurrentPlan, type Plan } from "@/lib/premium-client";
 import { ROOM_CONFIGS, type RoomId } from "@/lib/room-config";
 import { getRoomDetails } from "@/lib/work-room";
 import type { AdminActionKind } from "@/lib/work-room";
@@ -96,6 +97,36 @@ export default function AdminUsersPage() {
     setStatus(message);
   }
 
+  function applyPlan(plan: Plan) {
+    setCurrentPlan(plan);
+    const saved = { ...getUserProfile(), plan };
+    saveUserProfile(saved);
+    setProfileDraft(saved);
+    setStatus(plan === "premium" ? "Premium Demoを手動付与しました" : "Freeへ切り替えました");
+    if (plan === "premium") {
+      grantBadge("premium", "admin-manual");
+      grantTitle("premium-member", "admin-manual");
+    }
+  }
+
+  function toggleFounder() {
+    const nextFounder = !profileDraft.is_founder;
+    const saved = { ...profileDraft, is_founder: nextFounder };
+    saveUserProfile(saved);
+    setProfileDraft(saved);
+    if (nextFounder) {
+      grantBadge("founder-2026", "admin-manual");
+      grantTitle("founder", "admin-manual");
+    }
+    setStatus(nextFounder ? "Founderを手動付与しました" : "Founder表示をOFFにしました");
+  }
+
+  function grantBetaTester() {
+    grantBadge("beta-tester", "admin-manual");
+    grantTitle("beta-tester", "admin-manual");
+    setStatus("Beta Testerを手動付与しました");
+  }
+
   return (
     <AdminGuard>
       <main className="min-h-screen bg-cafe-950 p-6 text-stone-50 lg:p-8">
@@ -158,6 +189,22 @@ export default function AdminUsersPage() {
               <section className="glass-panel rounded-[2rem] p-5">
                 <p className="text-xs font-black uppercase text-amber-100/60">Growth Admin</p>
                 <h2 className="mt-2 text-2xl font-black">XP / Level / Coin</h2>
+
+                <div className="mt-4 grid gap-2 rounded-[1.5rem] border border-amber-100/15 bg-amber-100/10 p-4">
+                  <p className="text-xs font-black uppercase text-amber-100/70">Plan / Role</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <AdminActionButton label="Freeにする" onClick={() => applyPlan("free")} />
+                    <AdminActionButton label="Premium付与" onClick={() => applyPlan("premium")} />
+                    <AdminActionButton
+                      label={profileDraft.is_founder ? "Founder OFF" : "Founder付与"}
+                      onClick={toggleFounder}
+                    />
+                    <AdminActionButton label="Beta Tester付与" onClick={grantBetaTester} />
+                  </div>
+                  <p className="text-xs font-bold text-stone-200/58">
+                    現在: {profileDraft.plan} / Founder: {profileDraft.is_founder ? "ON" : "OFF"}
+                  </p>
+                </div>
 
                 <div className="mt-4 grid gap-3 rounded-[1.5rem] border border-white/10 bg-black/24 p-4">
                   <div className="flex items-center justify-between gap-4">

@@ -2,6 +2,16 @@
 
 export type Plan = "free" | "premium";
 
+export type InviteCode = {
+  code: string;
+  maxUses: number;
+  usedCount: number;
+  expiresAt: string;
+  grantPlan: Plan;
+  grantsBetaTester: boolean;
+  createdAt: string;
+};
+
 export type CustomRoomSeat = {
   seatId: string;
   name: string;
@@ -64,6 +74,8 @@ export type CustomRoom = {
   capacity: number;
   suspended: boolean;
   createdAt: string;
+  expiresAt?: string;
+  freeDailyPrivate?: boolean;
   participants: CustomRoomParticipant[];
   seats: CustomRoomSeat[];
 };
@@ -71,6 +83,8 @@ export type CustomRoom = {
 export const PREMIUM_STORAGE_KEY = "kiitos:premium-plan";
 export const CUSTOM_ROOMS_STORAGE_KEY = "kiitos:custom-rooms";
 export const CUSTOM_ROOM_EVENT = "kiitos:custom-room-change";
+export const FREE_PRIVATE_USAGE_KEY = "kiitos:free-private-room-usage";
+export const INVITE_CODES_STORAGE_KEY = "kiitos:invite-codes";
 
 const DEFAULT_CUSTOM_SEATS: CustomRoomSeat[] = [
   { seatId: "S1", name: "窓辺の席", x: 20, y: 34, width: 9, height: 11 },
@@ -219,6 +233,11 @@ export function setCurrentPlan(plan: Plan) {
   window.dispatchEvent(new Event("storage"));
 }
 
+export function grantPremiumDemo(source = "demo") {
+  setCurrentPlan("premium");
+  return { plan: "premium" as Plan, source };
+}
+
 export function isPremiumUser() {
   return getCurrentPlan() === "premium";
 }
@@ -259,6 +278,32 @@ export function deleteCustomRoom(roomId: string) {
   saveCustomRooms(readCustomRooms().filter((room) => room.id !== roomId));
 }
 
+export function getFreePrivateRoomUsage(date = getDateKey(new Date())) {
+  if (typeof window === "undefined") {
+    return { date, count: 0 };
+  }
+
+  try {
+    const raw = window.localStorage.getItem(FREE_PRIVATE_USAGE_KEY);
+    const parsed = raw ? (JSON.parse(raw) as { date: string; count: number }) : null;
+    return parsed?.date === date ? parsed : { date, count: 0 };
+  } catch {
+    return { date, count: 0 };
+  }
+}
+
+export function canCreateFreePrivateRoom() {
+  return getFreePrivateRoomUsage().count < 1;
+}
+
+export function recordFreePrivateRoomCreation() {
+  const usage = getFreePrivateRoomUsage();
+  window.localStorage.setItem(
+    FREE_PRIVATE_USAGE_KEY,
+    JSON.stringify({ date: usage.date, count: usage.count + 1 })
+  );
+}
+
 export function createCustomRoom(input: {
   name: string;
   description: string;
@@ -268,10 +313,12 @@ export function createCustomRoom(input: {
   bgm: string;
   visibility: "public" | "private";
   capacity: number;
+  freeDailyPrivate?: boolean;
 }) {
   const template = getCustomRoomTypeTemplate(input.roomTypeId ?? "cafe-style");
   const imageUrl = input.backgroundImage || template.imageUrl;
   const isPublic = input.visibility === "public";
+  const createdAt = new Date();
   const room: CustomRoom = {
     id: `room-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
     ownerId: "discord-demo-user",
@@ -292,7 +339,11 @@ export function createCustomRoom(input: {
     visibility: input.visibility,
     capacity: input.capacity,
     suspended: false,
-    createdAt: new Date().toISOString(),
+    createdAt: createdAt.toISOString(),
+    expiresAt: input.freeDailyPrivate
+      ? new Date(createdAt.getTime() + 24 * 60 * 60 * 1000).toISOString()
+      : undefined,
+    freeDailyPrivate: Boolean(input.freeDailyPrivate),
     participants: [],
     seats: getSeatsForTemplate(template.seatLayoutTemplate).slice(
       0,
@@ -301,6 +352,9 @@ export function createCustomRoom(input: {
   };
 
   upsertCustomRoom(room);
+  if (input.freeDailyPrivate) {
+    recordFreePrivateRoomCreation();
+  }
   return room;
 }
 
@@ -386,10 +440,100 @@ function normalizeCustomRoom(room: CustomRoom): CustomRoom {
     backgroundImage: room.backgroundImage ?? imageUrl,
     bgm: room.bgm ?? template.bgm,
     visibility,
+    expiresAt: room.expiresAt,
+    freeDailyPrivate: Boolean(room.freeDailyPrivate),
     seats: room.seats?.length ? room.seats : getSeatsForTemplate(template.seatLayoutTemplate)
+  };
+}
+
+export function getInviteCodes(): InviteCode[] {
+  if (typeof window === "undefined") {
+    return createInitialInviteCodes();
+  }
+
+  try {
+    const raw = window.localStorage.getItem(INVITE_CODES_STORAGE_KEY);
+    if (!raw) {
+      const initial = createInitialInviteCodes();
+      window.localStorage.setItem(INVITE_CODES_STORAGE_KEY, JSON.stringify(initial));
+      return initial;
+    }
+    const parsed = JSON.parse(raw) as InviteCode[];
+    return Array.isArray(parsed) ? parsed : createInitialInviteCodes();
+  } catch {
+    return createInitialInviteCodes();
+  }
+}
+
+export function saveInviteCodes(codes: InviteCode[]) {
+  window.localStorage.setItem(INVITE_CODES_STORAGE_KEY, JSON.stringify(codes));
+  window.dispatchEvent(new Event("storage"));
+}
+
+export function createPremiumInviteCode(input: {
+  code: string;
+  maxUses: number;
+  expiresAt: string;
+  grantPlan: Plan;
+  grantsBetaTester: boolean;
+}) {
+  const code: InviteCode = {
+    ...input,
+    code: input.code.trim().toUpperCase(),
+    usedCount: 0,
+    createdAt: new Date().toISOString()
+  };
+  saveInviteCodes([code, ...getInviteCodes().filter((item) => item.code !== code.code)]);
+  return code;
+}
+
+export function redeemInviteCode(rawCode: string) {
+  const code = rawCode.trim().toUpperCase();
+  const codes = getInviteCodes();
+  const found = codes.find((item) => item.code === code);
+
+  if (!found) {
+    return { ok: false, message: "招待コードが見つかりません。" };
+  }
+
+  if (new Date(found.expiresAt).getTime() < Date.now()) {
+    return { ok: false, message: "招待コードの有効期限が切れています。" };
+  }
+
+  if (found.usedCount >= found.maxUses) {
+    return { ok: false, message: "招待コードの使用回数上限に達しています。" };
+  }
+
+  saveInviteCodes(
+    codes.map((item) => (item.code === code ? { ...item, usedCount: item.usedCount + 1 } : item))
+  );
+  setCurrentPlan(found.grantPlan);
+  return {
+    ok: true,
+    message:
+      found.grantPlan === "premium" ? "Premium Demoを付与しました。" : "Freeに設定しました。",
+    code: found
   };
 }
 
 function createInviteCode() {
   return `KIITOS-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+}
+
+function createInitialInviteCodes(): InviteCode[] {
+  return [
+    {
+      code: "KIITOS-BETA",
+      maxUses: 100,
+      usedCount: 0,
+      expiresAt: "2026-09-01T00:00:00.000Z",
+      grantPlan: "premium",
+      grantsBetaTester: true,
+      createdAt: "2026-06-21T00:00:00.000Z"
+    }
+  ];
+}
+
+function getDateKey(date: Date) {
+  return date.toISOString().slice(0, 10);
 }

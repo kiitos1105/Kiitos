@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  canCreateFreePrivateRoom,
   createCustomRoom,
+  getFreePrivateRoomUsage,
   getCustomRoomTypeTemplate,
   getCustomRoomTypeTemplates,
   isPremiumUser,
@@ -25,9 +27,15 @@ export default function NewCustomRoomPage() {
   const [bgm, setBgm] = useState(selectedType.bgm);
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [capacity, setCapacity] = useState(selectedType.recommendedCapacity);
+  const [limitMessage, setLimitMessage] = useState("");
 
   useEffect(() => {
-    setPremium(isPremiumUser());
+    const currentPremium = isPremiumUser();
+    setPremium(currentPremium);
+    if (!currentPremium) {
+      setVisibility("private");
+      setCapacity((current) => Math.min(current, 5));
+    }
   }, []);
 
   function selectRoomType(typeId: CustomRoomTypeId) {
@@ -37,12 +45,22 @@ export default function NewCustomRoomPage() {
     setTheme(template.theme);
     setBackgroundImage(template.imageUrl);
     setBgm(template.bgm);
-    setCapacity(template.recommendedCapacity);
-    setVisibility(template.visibilityHint.includes("非公開") ? "private" : "public");
+    setCapacity(premium ? template.recommendedCapacity : Math.min(template.recommendedCapacity, 5));
+    setVisibility(
+      premium ? (template.visibilityHint.includes("非公開") ? "private" : "public") : "private"
+    );
   }
 
   function saveRoom() {
-    if (!premium) {
+    if (!premium && visibility !== "private") {
+      setLimitMessage("Freeユーザーは公開ルームを作成できません。Private Roomを選んでください。");
+      return;
+    }
+
+    if (!premium && !canCreateFreePrivateRoom()) {
+      setLimitMessage(
+        "本日のFreeプライベートルーム作成回数を使い切りました。Premiumなら無制限で作成できます。"
+      );
       return;
     }
 
@@ -53,41 +71,15 @@ export default function NewCustomRoomPage() {
       theme,
       backgroundImage,
       bgm,
-      visibility,
-      capacity
+      visibility: premium ? visibility : "private",
+      capacity: premium ? capacity : Math.min(capacity, 5),
+      freeDailyPrivate: !premium
     });
     router.push(`/custom-room/${room.id}`);
   }
 
-  if (!premium) {
-    return (
-      <main className="relative grid min-h-screen place-items-center overflow-hidden bg-cafe-950 p-6 text-stone-50">
-        <div className="home-background pointer-events-none fixed inset-0 opacity-40" />
-        <div className="pointer-events-none fixed inset-0 bg-black/65" />
-        <section className="glass-panel relative z-10 max-w-xl rounded-[2.25rem] p-8 text-center">
-          <p className="text-sm font-black uppercase text-amber-100/65">Premium Required</p>
-          <h1 className="mt-3 text-5xl font-black">Custom Open RoomはPremium限定です</h1>
-          <p className="mt-4 text-sm font-bold leading-6 text-stone-200/62">
-            Demo Premiumを有効化すると、このブラウザですぐに部屋作成を試せます。
-          </p>
-          <div className="mt-7 flex flex-wrap justify-center gap-3">
-            <Link
-              className="rounded-2xl bg-amber-100 px-6 py-4 font-black text-stone-950"
-              href="/pricing"
-            >
-              Pricingへ
-            </Link>
-            <Link
-              className="rounded-2xl border border-white/12 bg-white/8 px-6 py-4 font-black"
-              href="/lobby"
-            >
-              Lobbyへ戻る
-            </Link>
-          </div>
-        </section>
-      </main>
-    );
-  }
+  const freeUsage = getFreePrivateRoomUsage();
+  const freeCanCreate = premium || freeUsage.count < 1;
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-cafe-950 p-6 text-stone-50">
@@ -96,11 +88,21 @@ export default function NewCustomRoomPage() {
 
       <section className="relative z-10 mx-auto grid max-w-6xl gap-6">
         <header className="glass-panel rounded-[2.5rem] p-8">
-          <p className="text-sm font-black uppercase text-amber-100/65">Premium Custom Room</p>
+          <p className="text-sm font-black uppercase text-amber-100/65">
+            {premium ? "Premium Custom Room" : "Free Private Room"}
+          </p>
           <h1 className="mt-3 text-6xl font-black">カスタムルームを作成</h1>
           <p className="mt-4 max-w-3xl text-sm font-bold leading-6 text-stone-200/62">
-            ダミーデータ保存ですが、作成後は入室・座席選択・退出・編集まで操作できます。
+            {premium
+              ? "Premium Demoでは公開/非公開ルームを無制限で作成できます。"
+              : "Freeでは1日1回だけ、招待リンク付きPrivate Roomを作成できます。"}
           </p>
+          {!premium ? (
+            <div className="mt-5 rounded-2xl border border-amber-100/25 bg-amber-100/10 p-4 text-sm font-black text-amber-100">
+              本日のFree Private Room作成: {freeUsage.count}
+              /1。定員は最大5人、24時間後に自動終了想定です。
+            </div>
+          ) : null}
         </header>
 
         <section className="glass-panel rounded-[2rem] p-5">
@@ -188,7 +190,9 @@ export default function NewCustomRoomPage() {
                   onChange={(event) => setVisibility(event.target.value as "public" | "private")}
                   value={visibility}
                 >
-                  <option value="public">公開</option>
+                  <option disabled={!premium} value="public">
+                    公開{!premium ? "（Premium限定）" : ""}
+                  </option>
                   <option value="private">非公開</option>
                 </select>
               </label>
@@ -196,22 +200,44 @@ export default function NewCustomRoomPage() {
                 定員
                 <input
                   className="rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-stone-50 outline-none"
-                  max={8}
+                  max={premium ? 8 : 5}
                   min={1}
-                  onChange={(event) => setCapacity(Number(event.target.value))}
+                  onChange={(event) =>
+                    setCapacity(
+                      premium ? Number(event.target.value) : Math.min(Number(event.target.value), 5)
+                    )
+                  }
                   type="number"
-                  value={capacity}
+                  value={premium ? capacity : Math.min(capacity, 5)}
                 />
               </label>
             </div>
 
+            {limitMessage ? (
+              <div className="rounded-2xl border border-rose-200/30 bg-rose-300/12 p-4 text-sm font-black text-rose-100">
+                {limitMessage}
+                <Link className="ml-3 underline" href="/pricing">
+                  /pricingへ
+                </Link>
+              </div>
+            ) : null}
+
             <button
-              className="mt-2 rounded-2xl bg-amber-100 px-6 py-4 font-black text-stone-950"
+              className="mt-2 rounded-2xl bg-amber-100 px-6 py-4 font-black text-stone-950 disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={!freeCanCreate}
               onClick={saveRoom}
               type="button"
             >
-              保存して部屋を開く
+              {premium ? "保存して部屋を開く" : "Private Roomを作成"}
             </button>
+            {!freeCanCreate ? (
+              <Link
+                className="rounded-2xl border border-white/12 bg-white/8 px-6 py-4 text-center font-black"
+                href="/pricing"
+              >
+                Premiumなら無制限で作成できます
+              </Link>
+            ) : null}
           </form>
 
           <aside className="glass-panel overflow-hidden rounded-[2rem]">
