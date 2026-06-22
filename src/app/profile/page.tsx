@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { useState } from "react";
 import { getEquippedTitle, getFavoriteBadges, getUserProfile } from "@/lib/badges-client";
 import { getFocusTreeSummary, getLevelProgress } from "@/lib/level-client";
@@ -13,6 +14,7 @@ import {
 } from "@/lib/engagement-client";
 
 export default function ProfilePage() {
+  const { data: session } = useSession();
   const userProfile = getUserProfile();
   const title = getEquippedTitle();
   const badges = getFavoriteBadges();
@@ -37,19 +39,66 @@ export default function ProfilePage() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-sm font-black uppercase text-amber-100/65">{title.name}</p>
-              <h1 className="mt-3 text-6xl font-black">Demo Discord</h1>
+              <h1 className="mt-3 text-6xl font-black">
+                {session?.user?.name ?? "Discord未連携"}
+              </h1>
               <p className="mt-4 text-sm font-bold text-stone-200/62">
+                {session?.user?.id ? `Discord ID: ${session.user.id} / ` : ""}
                 {getGoalLabel(profile)} / 🔥 {profile.streakDays}日連続
               </p>
             </div>
-            <Link
-              className="rounded-2xl border border-white/12 bg-white/8 px-5 py-3 font-black"
-              href="/lobby"
-            >
-              Lobbyへ
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              {session?.user ? (
+                <button
+                  className="rounded-2xl border border-white/12 bg-white/8 px-5 py-3 font-black"
+                  onClick={() => void signOut({ callbackUrl: "/lobby", redirectTo: "/lobby" })}
+                  type="button"
+                >
+                  ログアウト
+                </button>
+              ) : (
+                <button
+                  className="rounded-2xl bg-indigo-300/20 px-5 py-3 font-black text-indigo-100"
+                  onClick={() => void signIn("discord", { callbackUrl: "/profile", redirectTo: "/profile" })}
+                  type="button"
+                >
+                  Discordでログイン
+                </button>
+              )}
+              <Link
+                className="rounded-2xl border border-white/12 bg-white/8 px-5 py-3 font-black"
+                href="/lobby"
+              >
+                Lobbyへ
+              </Link>
+            </div>
           </div>
         </header>
+
+        <section className="glass-panel rounded-[2rem] p-6">
+          <h2 className="text-3xl font-black">Discord連携</h2>
+          {session?.user ? (
+            <div className="mt-4 flex flex-wrap items-center gap-4">
+              <span
+                className="h-16 w-16 rounded-full bg-cover bg-center"
+                style={{
+                  backgroundImage: `url(${session.user.image ?? "https://cdn.discordapp.com/embed/avatars/0.png"})`
+                }}
+              />
+              <div>
+                <p className="text-2xl font-black">{session.user.name}</p>
+                <p className="mt-1 text-sm font-bold text-stone-200/58">{session.user.id}</p>
+                <p className="mt-2 text-xs font-black uppercase text-emerald-100">
+                  Founder / Beta Tester
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-3 text-sm font-bold text-amber-100">
+              ランキング参加にはDiscord連携が必要です。
+            </p>
+          )}
+        </section>
 
         <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
           <div className="grid gap-5">

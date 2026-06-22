@@ -9,7 +9,7 @@ import {
   getFreePrivateRoomUsage,
   getCustomRoomTypeTemplate,
   getCustomRoomTypeTemplates,
-  isPremiumUser,
+  hasCustomRoomAccess,
   type CustomRoomTypeId
 } from "@/lib/premium-client";
 
@@ -17,7 +17,7 @@ const ROOM_TYPES = getCustomRoomTypeTemplates();
 
 export default function NewCustomRoomPage() {
   const router = useRouter();
-  const [premium, setPremium] = useState(false);
+  const [customRoomAccess, setCustomRoomAccess] = useState(false);
   const [selectedTypeId, setSelectedTypeId] = useState<CustomRoomTypeId>("cafe-style");
   const selectedType = getCustomRoomTypeTemplate(selectedTypeId);
   const [name, setName] = useState("My Cafe Work Room");
@@ -30,9 +30,9 @@ export default function NewCustomRoomPage() {
   const [limitMessage, setLimitMessage] = useState("");
 
   useEffect(() => {
-    const currentPremium = isPremiumUser();
-    setPremium(currentPremium);
-    if (!currentPremium) {
+    const currentAccess = hasCustomRoomAccess();
+    setCustomRoomAccess(currentAccess);
+    if (!currentAccess) {
       setVisibility("private");
       setCapacity((current) => Math.min(current, 5));
     }
@@ -45,21 +45,27 @@ export default function NewCustomRoomPage() {
     setTheme(template.theme);
     setBackgroundImage(template.imageUrl);
     setBgm(template.bgm);
-    setCapacity(premium ? template.recommendedCapacity : Math.min(template.recommendedCapacity, 5));
+    setCapacity(
+      customRoomAccess ? template.recommendedCapacity : Math.min(template.recommendedCapacity, 5)
+    );
     setVisibility(
-      premium ? (template.visibilityHint.includes("非公開") ? "private" : "public") : "private"
+      customRoomAccess
+        ? template.visibilityHint.includes("非公開")
+          ? "private"
+          : "public"
+        : "private"
     );
   }
 
   function saveRoom() {
-    if (!premium && visibility !== "private") {
-      setLimitMessage("Freeユーザーは公開ルームを作成できません。Private Roomを選んでください。");
+    if (!customRoomAccess && visibility !== "private") {
+      setLimitMessage("β版では公開Custom Open Roomは管理者許可制です。Private Roomを選んでください。");
       return;
     }
 
-    if (!premium && !canCreateFreePrivateRoom()) {
+    if (!customRoomAccess && !canCreateFreePrivateRoom()) {
       setLimitMessage(
-        "本日のFreeプライベートルーム作成回数を使い切りました。Premiumなら無制限で作成できます。"
+        "本日のFreeプライベートルーム作成回数を使い切りました。明日また作成できます。"
       );
       return;
     }
@@ -71,15 +77,15 @@ export default function NewCustomRoomPage() {
       theme,
       backgroundImage,
       bgm,
-      visibility: premium ? visibility : "private",
-      capacity: premium ? capacity : Math.min(capacity, 5),
-      freeDailyPrivate: !premium
+      visibility: customRoomAccess ? visibility : "private",
+      capacity: customRoomAccess ? capacity : Math.min(capacity, 5),
+      freeDailyPrivate: !customRoomAccess
     });
     router.push(`/custom-room/${room.id}`);
   }
 
   const freeUsage = getFreePrivateRoomUsage();
-  const freeCanCreate = premium || freeUsage.count < 1;
+  const freeCanCreate = customRoomAccess || freeUsage.count < 1;
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-cafe-950 p-6 text-stone-50">
@@ -89,15 +95,15 @@ export default function NewCustomRoomPage() {
       <section className="relative z-10 mx-auto grid max-w-6xl gap-6">
         <header className="glass-panel rounded-[2.5rem] p-8">
           <p className="text-sm font-black uppercase text-amber-100/65">
-            {premium ? "Premium Custom Room" : "Free Private Room"}
+            {customRoomAccess ? "Custom Room Access" : "Free Private Room"}
           </p>
           <h1 className="mt-3 text-6xl font-black">カスタムルームを作成</h1>
           <p className="mt-4 max-w-3xl text-sm font-bold leading-6 text-stone-200/62">
-            {premium
-              ? "Premium Demoでは公開/非公開ルームを無制限で作成できます。"
-              : "Freeでは1日1回だけ、招待リンク付きPrivate Roomを作成できます。"}
+            {customRoomAccess
+              ? "管理者許可により公開/非公開のCustom Roomを作成できます。"
+              : "β版では1日1回だけ、招待リンク付きPrivate Roomを作成できます。"}
           </p>
-          {!premium ? (
+          {!customRoomAccess ? (
             <div className="mt-5 rounded-2xl border border-amber-100/25 bg-amber-100/10 p-4 text-sm font-black text-amber-100">
               本日のFree Private Room作成: {freeUsage.count}
               /1。定員は最大5人、24時間後に自動終了想定です。
@@ -190,8 +196,8 @@ export default function NewCustomRoomPage() {
                   onChange={(event) => setVisibility(event.target.value as "public" | "private")}
                   value={visibility}
                 >
-                  <option disabled={!premium} value="public">
-                    公開{!premium ? "（Premium限定）" : ""}
+                  <option disabled={!customRoomAccess} value="public">
+                    公開{!customRoomAccess ? "（Admin許可制）" : ""}
                   </option>
                   <option value="private">非公開</option>
                 </select>
@@ -200,15 +206,17 @@ export default function NewCustomRoomPage() {
                 定員
                 <input
                   className="rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-stone-50 outline-none"
-                  max={premium ? 8 : 5}
+                  max={customRoomAccess ? 8 : 5}
                   min={1}
                   onChange={(event) =>
                     setCapacity(
-                      premium ? Number(event.target.value) : Math.min(Number(event.target.value), 5)
+                      customRoomAccess
+                        ? Number(event.target.value)
+                        : Math.min(Number(event.target.value), 5)
                     )
                   }
                   type="number"
-                  value={premium ? capacity : Math.min(capacity, 5)}
+                  value={customRoomAccess ? capacity : Math.min(capacity, 5)}
                 />
               </label>
             </div>
@@ -216,9 +224,6 @@ export default function NewCustomRoomPage() {
             {limitMessage ? (
               <div className="rounded-2xl border border-rose-200/30 bg-rose-300/12 p-4 text-sm font-black text-rose-100">
                 {limitMessage}
-                <Link className="ml-3 underline" href="/pricing">
-                  /pricingへ
-                </Link>
               </div>
             ) : null}
 
@@ -228,14 +233,14 @@ export default function NewCustomRoomPage() {
               onClick={saveRoom}
               type="button"
             >
-              {premium ? "保存して部屋を開く" : "Private Roomを作成"}
+              {customRoomAccess ? "保存して部屋を開く" : "Private Roomを作成"}
             </button>
             {!freeCanCreate ? (
               <Link
                 className="rounded-2xl border border-white/12 bg-white/8 px-6 py-4 text-center font-black"
-                href="/pricing"
+                href="/beta"
               >
-                Premiumなら無制限で作成できます
+                β版の利用ルールを見る
               </Link>
             ) : null}
           </form>

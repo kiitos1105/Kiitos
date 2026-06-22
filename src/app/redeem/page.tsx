@@ -10,7 +10,7 @@ import {
   playBadgeSound,
   saveUserProfile
 } from "@/lib/badges-client";
-import { redeemInviteCode } from "@/lib/premium-client";
+import { redeemInviteCode, setCustomRoomAccess } from "@/lib/premium-client";
 
 export default function RedeemPage() {
   const [code, setCode] = useState("KIITOS-BETA");
@@ -27,9 +27,8 @@ export default function RedeemPage() {
     }
 
     if (result.code?.grantPlan === "premium") {
-      grantBadge("premium", "invite-code");
-      grantTitle("premium-member", "invite-code");
-      saveUserProfile({ ...getUserProfile(), plan: "premium" });
+      setCustomRoomAccess(true);
+      saveUserProfile({ ...getUserProfile(), plan: "free" });
     }
 
     if (result.code?.grantsBetaTester) {
@@ -52,7 +51,7 @@ export default function RedeemPage() {
         <p className="text-sm font-black uppercase text-amber-100/65">Redeem Invite</p>
         <h1 className="mt-3 text-5xl font-black">招待コード</h1>
         <p className="mt-4 text-sm font-bold leading-6 text-stone-200/62">
-          β版ではPremium Demoを招待コードまたはAdmin手動付与で利用できます。
+          β版では招待コードでCustom Room検証権限やBeta Tester表示を付与できます。
         </p>
 
         <label className="mt-6 grid gap-2 text-sm font-black text-stone-200/65">
@@ -84,9 +83,9 @@ export default function RedeemPage() {
           </button>
           <Link
             className="rounded-2xl border border-white/12 bg-white/8 px-6 py-4 font-black"
-            href="/pricing"
+            href="/beta"
           >
-            Pricingへ
+            β版ルール
           </Link>
           <Link
             className="rounded-2xl border border-white/12 bg-white/8 px-6 py-4 font-black"

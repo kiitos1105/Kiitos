@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { AdminGuard } from "@/components/AdminGuard";
 import { getUserProfile, grantBadge, grantTitle, saveUserProfile } from "@/lib/badges-client";
 import { getEngagementProfile, saveEngagementProfile } from "@/lib/engagement-client";
@@ -11,9 +11,14 @@ import {
   getLevelProgress,
   setLevelProfile
 } from "@/lib/level-client";
-import { setCurrentPlan, type Plan } from "@/lib/premium-client";
+import { setCustomRoomAccess } from "@/lib/premium-client";
 import { ROOM_CONFIGS, type RoomId } from "@/lib/room-config";
-import { getRoomDetails } from "@/lib/work-room";
+import {
+  getRoomDetails,
+  mutateAdminUserState,
+  readAdminUserState,
+  type WorkLog
+} from "@/lib/work-room";
 import type { AdminActionKind } from "@/lib/work-room";
 
 const ACTIONS: { kind: AdminActionKind; label: string }[] = [
@@ -25,7 +30,7 @@ const ACTIONS: { kind: AdminActionKind; label: string }[] = [
 ];
 
 export default function AdminUsersPage() {
-  const rooms = useMemo(() => getRoomDetails(), []);
+  const [rooms, setRooms] = useState(() => getRoomDetails());
   const [status, setStatus] = useState("操作対象を選んでください");
   const [targetRoom, setTargetRoom] = useState<RoomId>("cafe");
   const [profileDraft, setProfileDraft] = useState(() => getUserProfile());
@@ -41,22 +46,153 @@ export default function AdminUsersPage() {
   const levelSummary = getLevelProgress(profileDraft);
   const treeSummary = getFocusTreeSummary(profileDraft);
   const focusHours = Math.round((profileDraft.total_focus_time / 3600) * 10) / 10;
+  const adminState = readAdminUserState();
 
-  async function action(kind: AdminActionKind, targetUserId: string) {
-    const response = await fetch("/api/admin/settings", {
+  useEffect(() => {
+    const refresh = () => setRooms(getRoomDetails());
+    window.addEventListener("kiitos:admin-users-change", refresh);
+    return () => window.removeEventListener("kiitos:admin-users-change", refresh);
+  }, []);
+
+  async function postAdminAction(path: string, body: Record<string, unknown>) {
+    const response = await fetch(path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: {
-          kind,
-          targetUserId,
-          roomId: targetRoom,
-          message: `${kind} from /admin/users`
-        }
-      })
+      body: JSON.stringify(body)
     });
+    if (!response.ok) {
+      throw new Error("Admin API failed");
+    }
+  }
 
-    setStatus(response.ok ? "操作を記録しました" : "操作に失敗しました");
+  function appendLog(userId: string): WorkLog {
+    return {
+      id: crypto.randomUUID(),
+      userName: userId,
+      roomId: targetRoom,
+      seatId: "-",
+      startedAt: new Date().toISOString(),
+      endedAt: new Date().toISOString(),
+      durationSeconds: 0
+    };
+  }
+
+  async function action(kind: AdminActionKind, targetUserId: string) {
+    const participant = participants.find((item) => item.id === targetUserId);
+    if (!participant) return;
+
+    try {
+      if (kind === "force_out") {
+        if (!window.confirm(`${participant.displayName} を強制退出しますか？`)) return;
+        await postAdminAction("/api/admin/users/kick", {
+          userId: targetUserId,
+          reason: "Admin force out"
+        });
+        mutateAdminUserState((state) => ({
+          ...state,
+          kickedUserIds: { ...state.kickedUserIds, [targetUserId]: new Date().toISOString() },
+          logs: [appendLog(targetUserId), ...state.logs]
+        }));
+        setStatus(`${participant.displayName} を強制退出しました。`);
+      }
+
+      if (kind === "warn") {
+        const reason = window.prompt("警告理由を入力してください", "作業部屋のルールを確認してください");
+        if (!reason) return;
+        await postAdminAction("/api/admin/users/warn", { userId: targetUserId, reason });
+        mutateAdminUserState((state) => ({
+          ...state,
+          warnings: [
+            {
+              id: crypto.randomUUID(),
+              userId: targetUserId,
+              reason,
+              warnedBy: "env-admin",
+              createdAt: new Date().toISOString()
+            },
+            ...state.warnings
+          ],
+          logs: [appendLog(targetUserId), ...state.logs]
+        }));
+        setStatus(`${participant.displayName} に警告を送信しました。`);
+      }
+
+      if (kind === "ban") {
+        const reason = window.prompt("BAN理由を入力してください", "荒らし対策");
+        if (!reason || !window.confirm(`${participant.displayName} をBANしますか？`)) return;
+        await postAdminAction("/api/admin/users/ban", { userId: targetUserId, reason });
+        mutateAdminUserState((state) => ({
+          ...state,
+          bans: {
+            ...state.bans,
+            [targetUserId]: {
+              userId: targetUserId,
+              reason,
+              bannedBy: "env-admin",
+              createdAt: new Date().toISOString()
+            }
+          },
+          kickedUserIds: { ...state.kickedUserIds, [targetUserId]: new Date().toISOString() },
+          logs: [appendLog(targetUserId), ...state.logs]
+        }));
+        setStatus(`${participant.displayName} をBANしました。`);
+      }
+
+      if (kind === "move_room" || kind === "move_seat") {
+        const target = getRoomDetails().find((room) => room.roomId === targetRoom);
+        const emptySeat = target?.seats.find((seat) => seat.status === "available");
+        if (!emptySeat) {
+          setStatus("移動先に空席がありません。");
+          return;
+        }
+        await postAdminAction("/api/admin/users/move", {
+          userId: targetUserId,
+          roomId: targetRoom,
+          seatId: emptySeat.id
+        });
+        mutateAdminUserState((state) => ({
+          ...state,
+          moves: {
+            ...state.moves,
+            [targetUserId]: {
+              userId: targetUserId,
+              roomId: targetRoom,
+              seatId: emptySeat.id,
+              movedBy: "env-admin",
+              createdAt: new Date().toISOString()
+            }
+          },
+          logs: [appendLog(targetUserId), ...state.logs]
+        }));
+        setStatus(`${participant.displayName} を ${targetRoom}/${emptySeat.id} へ移動しました。`);
+      }
+
+      setRooms(getRoomDetails());
+    } catch {
+      setStatus("操作に失敗しました。Adminログイン状態を確認してください。");
+    }
+  }
+
+  async function unban(targetUserId: string) {
+    try {
+      await postAdminAction("/api/admin/users/unban", { userId: targetUserId });
+      mutateAdminUserState((state) => {
+        const bans = { ...state.bans };
+        delete bans[targetUserId];
+        const kickedUserIds = { ...state.kickedUserIds };
+        delete kickedUserIds[targetUserId];
+        return {
+          ...state,
+          bans,
+          kickedUserIds,
+          logs: [appendLog(targetUserId), ...state.logs]
+        };
+      });
+      setRooms(getRoomDetails());
+      setStatus(`${targetUserId} のBANを解除しました。`);
+    } catch {
+      setStatus("BAN解除に失敗しました。");
+    }
   }
 
   function saveLevelProfile(message = "ユーザー成長データを保存しました") {
@@ -97,16 +233,12 @@ export default function AdminUsersPage() {
     setStatus(message);
   }
 
-  function applyPlan(plan: Plan) {
-    setCurrentPlan(plan);
-    const saved = { ...getUserProfile(), plan };
+  function applyCustomRoomAccess(enabled: boolean) {
+    setCustomRoomAccess(enabled);
+    const saved = { ...getUserProfile(), plan: "free" as const };
     saveUserProfile(saved);
     setProfileDraft(saved);
-    setStatus(plan === "premium" ? "Premium Demoを手動付与しました" : "Freeへ切り替えました");
-    if (plan === "premium") {
-      grantBadge("premium", "admin-manual");
-      grantTitle("premium-member", "admin-manual");
-    }
+    setStatus(enabled ? "Custom Room作成権限をONにしました" : "Custom Room作成権限をOFFにしました");
   }
 
   function toggleFounder() {
@@ -161,7 +293,36 @@ export default function AdminUsersPage() {
                         {item.label}
                       </button>
                     ))}
+                    {adminState.bans[participant.id] ? (
+                      <button
+                        className="rounded-2xl border border-emerald-100/25 bg-emerald-100/10 px-3 py-2 text-sm font-black text-emerald-100"
+                        onClick={() => void unban(participant.id)}
+                        type="button"
+                      >
+                        BAN解除
+                      </button>
+                    ) : null}
                   </div>
+                </article>
+              ))}
+              {Object.values(adminState.bans).map((ban) => (
+                <article
+                  className="glass-panel grid gap-4 rounded-[1.75rem] border-rose-200/30 bg-rose-300/10 p-4 md:grid-cols-[1fr_auto]"
+                  key={ban.userId}
+                >
+                  <div>
+                    <p className="text-2xl font-black">{ban.userId}</p>
+                    <p className="mt-1 text-sm font-bold text-rose-100/75">
+                      BAN中 / {ban.reason}
+                    </p>
+                  </div>
+                  <button
+                    className="rounded-2xl border border-emerald-100/25 bg-emerald-100/10 px-4 py-3 font-black text-emerald-100"
+                    onClick={() => void unban(ban.userId)}
+                    type="button"
+                  >
+                    BAN解除
+                  </button>
                 </article>
               ))}
             </div>
@@ -191,10 +352,18 @@ export default function AdminUsersPage() {
                 <h2 className="mt-2 text-2xl font-black">XP / Level / Coin</h2>
 
                 <div className="mt-4 grid gap-2 rounded-[1.5rem] border border-amber-100/15 bg-amber-100/10 p-4">
-                  <p className="text-xs font-black uppercase text-amber-100/70">Plan / Role</p>
+                  <p className="text-xs font-black uppercase text-amber-100/70">
+                    Beta Role / Custom Access
+                  </p>
                   <div className="grid grid-cols-2 gap-2">
-                    <AdminActionButton label="Freeにする" onClick={() => applyPlan("free")} />
-                    <AdminActionButton label="Premium付与" onClick={() => applyPlan("premium")} />
+                    <AdminActionButton
+                      label="Custom権限ON"
+                      onClick={() => applyCustomRoomAccess(true)}
+                    />
+                    <AdminActionButton
+                      label="Custom権限OFF"
+                      onClick={() => applyCustomRoomAccess(false)}
+                    />
                     <AdminActionButton
                       label={profileDraft.is_founder ? "Founder OFF" : "Founder付与"}
                       onClick={toggleFounder}
@@ -202,7 +371,7 @@ export default function AdminUsersPage() {
                     <AdminActionButton label="Beta Tester付与" onClick={grantBetaTester} />
                   </div>
                   <p className="text-xs font-bold text-stone-200/58">
-                    現在: {profileDraft.plan} / Founder: {profileDraft.is_founder ? "ON" : "OFF"}
+                    現在: Beta Tester / Founder: {profileDraft.is_founder ? "ON" : "OFF"}
                   </p>
                 </div>
 

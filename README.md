@@ -36,9 +36,12 @@
 - `/ranking`: 今日・週間・月間・部屋別ランキング
 - `/friends`: フレンド一覧、申請、ブロック、一緒に参加
 - `/certificate`: 集中証明書の作成と保存
-- `/pricing`: Demo Premium
+- `/pricing`: β版では `/beta` へリダイレクト
+- `/beta`: β版の利用ルール
 - `/redeem`: 招待コード入力
-- `/custom-room/new`: Premium用Custom Open Room作成
+- `/custom-room/new`: Private Room / Admin許可Custom Room作成
+- `/auth/debug`: Discord OAuth / session確認
+- `/auth/error`: Discord OAuthエラー表示
 
 ## Rooms
 
@@ -114,11 +117,11 @@ cp .env.example .env.local
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_APP_STAGE=beta
 NEXT_PUBLIC_DISPLAY_BGM=Lo-Fi Rainy Desk
-NEXT_PUBLIC_DISPLAY_WEATHER=Tokyo · Light Rain
-ADMIN_PASSWORD=1
+ADMIN_PASSWORD=Takemasa1105
 SESSION_WORKER_INTERVAL_MS=60000
-DISCORD_CLIENT_ID=
+DISCORD_CLIENT_ID=1518475846216712282
 DISCORD_CLIENT_SECRET=
 NEXTAUTH_SECRET=
 NEXTAUTH_URL=http://localhost:3000
@@ -139,11 +142,11 @@ Supabase未設定でもダミーデータで動きます。
 | `NEXT_PUBLIC_SUPABASE_URL`            | Production       | Web         | Supabase project URL.                                          |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY`       | Production       | Web         | Supabase anon key for browser reads/realtime.                  |
 | `SUPABASE_SERVICE_ROLE_KEY`           | Production/Admin | API/Worker  | Server-side Supabase writes. Never expose publicly.            |
-| `ADMIN_PASSWORD`                      | Yes              | Web/Admin   | Simple admin password. Local MVP default is `1`.               |
+| `NEXT_PUBLIC_APP_STAGE`               | No               | Web         | `beta` hides payment UI. `production` can enable future paid UI. |
+| `ADMIN_PASSWORD`                      | Yes              | Web/Admin   | Simple admin password. Current default example is `Takemasa1105`. |
 | `NEXT_PUBLIC_DISPLAY_BGM`             | No               | Display     | Default OBS BGM label.                                         |
-| `NEXT_PUBLIC_DISPLAY_WEATHER`         | No               | Display     | Default OBS weather label.                                     |
 | `SESSION_WORKER_INTERVAL_MS`          | No               | Worker      | Cleanup/log worker interval.                                   |
-| `DISCORD_CLIENT_ID`                   | Discord OAuth    | Web/Auth    | Discord OAuth application client ID.                           |
+| `DISCORD_CLIENT_ID`                   | Discord OAuth    | Web/Auth    | Discord OAuth application client ID. Current app: `1518475846216712282`. |
 | `DISCORD_CLIENT_SECRET`               | Discord OAuth    | Web/Auth    | Discord OAuth client secret.                                   |
 | `NEXTAUTH_SECRET`                     | Discord OAuth    | Web/Auth    | Auth session secret. Generate a long random value.             |
 | `NEXTAUTH_URL`                        | Discord OAuth    | Web/Auth    | Local: `http://localhost:3000`; production: public Vercel URL. |
@@ -154,31 +157,17 @@ Supabase未設定でもダミーデータで動きます。
 | `STRIPE_WEBHOOK_SECRET`               | Future           | Payment     | Future Stripe webhook secret.                                  |
 | `NEXT_PUBLIC_STRIPE_PRICE_ID_PREMIUM` | Future           | Payment     | Future Premium price id.                                       |
 
-## Beta Premium / Payment Policy
+## Beta / Payment Policy
 
-決済会社とはまだ契約していない前提のため、β版では本決済を実行しません。
+決済会社とはまだ契約していない前提のため、β版では本決済を実行せず、課金導線も表示しません。
 
-Premium Demoの付与方法:
+β版の扱い:
 
-- `/pricing` の `Premiumになる（Demo / 開発用）`
-- `/redeem` の招待コード入力
-- `/admin/users` のAdmin手動付与
-
-Freeプラン:
-
-- 公式ルーム参加
-- 集中時間記録
-- ランキング参加
-- Private Roomを1日1回作成可能
-
-Premium Demo:
-
-- Custom Open Room作成
-- Private Room無制限
-- ルーム背景変更
-- BGM変更
-- 参加者管理
-- Premiumバッジ
+- `NEXT_PUBLIC_APP_STAGE=beta` の時、`/pricing` は `/beta` へリダイレクトします。
+- すべてのユーザーをBeta Testerとして扱います。
+- 公式ルーム、集中時間記録、バッジ、レベル、ランキングを利用できます。
+- Private Roomは1日1回作成できます。
+- Custom Open RoomはAdminが検証対象ユーザーへ許可した場合のみ利用できます。
 
 Free Private Room制限:
 
@@ -188,8 +177,44 @@ Free Private Room制限:
 - 招待コード/招待リンクで友達を呼べる設計
 - 24時間後に自動終了想定、または作成者/Adminが削除
 
-将来的にStripe / STORES / PayPayへ差し替える場合は、現在の `Plan` / `Premium Demo`
-判定を決済プロバイダーの課金状態へ置き換えます。
+将来的にStripe / STORES / PayPayへ差し替える場合は、現在のβフラグとCustom Room権限判定を決済プロバイダーの課金状態へ置き換えます。
+
+## Weather
+
+天気表示は固定テキストではなく `/api/weather` から取得します。
+
+- API: Open-Meteo
+- APIキー: 不要
+- 対象都市: 東京 / 大阪 / 名古屋 / 福岡 / 札幌
+- 更新間隔: 5〜10分
+- Admin設定: `/admin/weather`
+
+Open-Meteo取得に失敗した場合でも、画面はフォールバック表示で崩れません。
+
+## BGM / Audio Rights
+
+部屋ごとのBGMは `public/audio/` に音源を置く想定です。
+
+```text
+public/audio/lofi-rain.mp3
+public/audio/library-quiet.mp3
+public/audio/office-focus.mp3
+public/audio/creator-night.mp3
+public/audio/night-ambient.mp3
+```
+
+使用できる音源:
+
+- 自作BGM
+- 商用利用可能な著作権フリーBGM
+- AI生成BGMで、利用規約上商用・配信利用OKのもの
+
+使用禁止:
+
+- 市販曲
+- YouTubeから拾った曲
+- TikTok流行曲
+- 権利不明の音源
 
 ## Supabase
 
@@ -270,6 +295,12 @@ GitHubへpush後、Vercelで公開URLを発行します。
 https://本番ドメイン/api/auth/callback/discord
 ```
 
+例:
+
+```text
+https://kiitos-xxxx.vercel.app/api/auth/callback/discord
+```
+
 ## Discord OAuth Setup
 
 Kiitos Work Roomは通常のメール登録ではなく、Discordログインを前提に設計します。
@@ -282,7 +313,7 @@ Discord Developer Portal側:
 4. `.env.local` / Vercel Environment Variables に以下を設定します。
 
 ```bash
-DISCORD_CLIENT_ID=
+DISCORD_CLIENT_ID=1518475846216712282
 DISCORD_CLIENT_SECRET=
 NEXTAUTH_SECRET=
 NEXTAUTH_URL=http://localhost:3000
@@ -301,6 +332,14 @@ https://本番ドメイン/api/auth/callback/discord
 ```
 
 Redirect URLはアプリ側のcallback URLと完全一致する必要があります。
+
+ログイン確認:
+
+- `/lobby` 右上の `Discordでログイン`
+- `/profile` のDiscord連携表示
+- `/ranking` の「※ランキングインするにはDiscord連携が必要です。」
+- `/auth/debug` のsession / Discord ID / callback URL
+- `/auth/error` の原因表示
 
 `NEXTAUTH_SECRET` は以下のようなコマンドで生成できます。
 
@@ -389,7 +428,6 @@ XP獲得のMVPルール:
 - 7日連続: `+300 XP`
 - イベント参加: `+200 XP`
 - Founder: `+500 XP`
-- Premium: `+50 XP / 日`
 
 席を退出するとリザルト画面が表示され、集中時間、獲得XP、Coin、Focus Treeの成長が確認できます。
 Coinは今後、家具・アバター・背景・フレーム・BGM購入に使う想定です。

@@ -81,6 +81,7 @@ export type CustomRoom = {
 };
 
 export const PREMIUM_STORAGE_KEY = "kiitos:premium-plan";
+export const CUSTOM_ROOM_ACCESS_KEY = "kiitos:custom-room-access";
 export const CUSTOM_ROOMS_STORAGE_KEY = "kiitos:custom-rooms";
 export const CUSTOM_ROOM_EVENT = "kiitos:custom-room-change";
 export const FREE_PRIVATE_USAGE_KEY = "kiitos:free-private-room-usage";
@@ -240,6 +241,19 @@ export function grantPremiumDemo(source = "demo") {
 
 export function isPremiumUser() {
   return getCurrentPlan() === "premium";
+}
+
+export function hasCustomRoomAccess() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.localStorage.getItem(CUSTOM_ROOM_ACCESS_KEY) === "enabled" || isPremiumUser();
+}
+
+export function setCustomRoomAccess(enabled: boolean) {
+  window.localStorage.setItem(CUSTOM_ROOM_ACCESS_KEY, enabled ? "enabled" : "disabled");
+  window.dispatchEvent(new Event("storage"));
 }
 
 export function readCustomRooms(): CustomRoom[] {
@@ -511,7 +525,7 @@ export function redeemInviteCode(rawCode: string) {
   return {
     ok: true,
     message:
-      found.grantPlan === "premium" ? "Premium Demoを付与しました。" : "Freeに設定しました。",
+      found.grantPlan === "premium" ? "βアクセスを付与しました。" : "Freeに設定しました。",
     code: found
   };
 }

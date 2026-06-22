@@ -154,7 +154,7 @@ export default function AdminRoomsPage() {
             <div className="mt-6 grid gap-3">
               {customRooms.length === 0 ? (
                 <p className="rounded-2xl border border-white/10 bg-black/24 p-4 text-sm font-bold text-stone-200/60">
-                  まだカスタムルームはありません。Premium Demoで作成するとここに表示されます。
+                  まだカスタムルームはありません。Private RoomまたはAdmin許可のCustom Roomを作成するとここに表示されます。
                 </p>
               ) : (
                 customRooms.map((room) => (

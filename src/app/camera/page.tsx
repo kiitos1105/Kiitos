@@ -7,7 +7,7 @@ import { getRoomConfig } from "@/lib/room-config";
 import { formatDuration } from "@/lib/time";
 
 export default function CameraPage() {
-  const rooms = useMemo(() => getRoomDetails(), []);
+  const [rooms, setRooms] = useState(() => getRoomDetails());
   const [activeIndex, setActiveIndex] = useState(0);
   const [intervalSeconds, setIntervalSeconds] = useState(7);
   const [prioritizePopularRooms, setPrioritizePopularRooms] = useState(false);
@@ -25,6 +25,16 @@ export default function CameraPage() {
     (sum, participant) => sum + participant.elapsedSeconds,
     0
   );
+
+  useEffect(() => {
+    const syncRooms = () => setRooms(getRoomDetails());
+    window.addEventListener("storage", syncRooms);
+    window.addEventListener("kiitos:admin-users-change", syncRooms);
+    return () => {
+      window.removeEventListener("storage", syncRooms);
+      window.removeEventListener("kiitos:admin-users-change", syncRooms);
+    };
+  }, []);
 
   useEffect(() => {
     fetch("/api/admin/settings")

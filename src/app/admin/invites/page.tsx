@@ -58,7 +58,7 @@ export default function AdminInvitesPage() {
                   onChange={(event) => setGrantPlan(event.target.value as Plan)}
                   value={grantPlan}
                 >
-                  <option value="premium">Premium Demo</option>
+                  <option value="premium">Beta Custom Access</option>
                   <option value="free">Free</option>
                 </select>
               </label>

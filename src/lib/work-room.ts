@@ -52,6 +52,39 @@ export type AdminActionDraft = {
   message?: string;
 };
 
+export type AdminWarning = {
+  id: string;
+  userId: string;
+  reason: string;
+  warnedBy: string;
+  createdAt: string;
+};
+
+export type AdminBan = {
+  userId: string;
+  reason: string;
+  bannedBy: string;
+  createdAt: string;
+};
+
+export type AdminMove = {
+  userId: string;
+  roomId: RoomId;
+  seatId?: string;
+  movedBy: string;
+  createdAt: string;
+};
+
+export type AdminUserState = {
+  kickedUserIds: Record<string, string>;
+  warnings: AdminWarning[];
+  bans: Record<string, AdminBan>;
+  moves: Record<string, AdminMove>;
+  logs: WorkLog[];
+};
+
+const ADMIN_USER_STATE_KEY = "kiitos:admin-user-state";
+
 const ROOM_RULES: Record<RoomId, string[]> = {
   cafe: ["短い雑談OK", "BGMと雨音を楽しむ", "長文チャットは控えめに"],
   library: ["会話禁止", "通知音OFF", "読書・勉強・調べ物向け"],
@@ -85,7 +118,7 @@ const SAMPLE_NAMES: Record<RoomId, string[]> = {
 };
 
 export function getRoomDetails(now = new Date()): RoomDetail[] {
-  return ROOM_CONFIGS.map((room, roomIndex) => {
+  const rooms = ROOM_CONFIGS.map((room, roomIndex) => {
     const participants = createMockParticipants(room.id, roomIndex, now);
     const seats = createSeats(room.id, participants);
 
@@ -105,6 +138,8 @@ export function getRoomDetails(now = new Date()): RoomDetail[] {
       enabled: true
     };
   });
+
+  return applyAdminUserState(rooms, now);
 }
 
 export function getRoomDetail(roomId: string, now = new Date()): RoomDetail | null {
@@ -133,6 +168,83 @@ export function createAdminAction(action: AdminActionDraft) {
     actor: "env-admin",
     ...action
   };
+}
+
+export function getEmptyAdminUserState(): AdminUserState {
+  return {
+    kickedUserIds: {},
+    warnings: [],
+    bans: {},
+    moves: {},
+    logs: []
+  };
+}
+
+export function readAdminUserState(): AdminUserState {
+  if (typeof window === "undefined") {
+    return getEmptyAdminUserState();
+  }
+
+  try {
+    const raw = window.localStorage.getItem(ADMIN_USER_STATE_KEY);
+    if (!raw) {
+      return getEmptyAdminUserState();
+    }
+    return { ...getEmptyAdminUserState(), ...(JSON.parse(raw) as Partial<AdminUserState>) };
+  } catch {
+    return getEmptyAdminUserState();
+  }
+}
+
+export function writeAdminUserState(state: AdminUserState) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(ADMIN_USER_STATE_KEY, JSON.stringify(state));
+  window.dispatchEvent(new Event("kiitos:admin-users-change"));
+  window.dispatchEvent(new Event("storage"));
+}
+
+export function mutateAdminUserState(mutator: (state: AdminUserState) => AdminUserState) {
+  const next = mutator(readAdminUserState());
+  writeAdminUserState(next);
+  return next;
+}
+
+export function clearAdminUserState() {
+  writeAdminUserState(getEmptyAdminUserState());
+}
+
+function applyAdminUserState(rooms: RoomDetail[], now: Date): RoomDetail[] {
+  const state = readAdminUserState();
+  const nextParticipantsByRoom = new Map<RoomId, DisplayParticipant[]>(
+    rooms.map((room) => [room.roomId, []])
+  );
+
+  for (const room of rooms) {
+    for (const participant of room.participants) {
+      if (state.bans[participant.id] || state.kickedUserIds[participant.id]) {
+        continue;
+      }
+
+      const move = state.moves[participant.id];
+      const nextParticipant = move
+        ? { ...participant, seatId: move.seatId ?? participant.seatId }
+        : participant;
+      const targetRoomId = move?.roomId ?? room.roomId;
+      nextParticipantsByRoom.get(targetRoomId)?.push(nextParticipant);
+    }
+  }
+
+  return rooms.map((room) => {
+    const participants = nextParticipantsByRoom.get(room.roomId) ?? [];
+    return {
+      ...room,
+      participants,
+      seats: createSeats(room.roomId, participants),
+      logs: createMockLogs(room.roomId, participants, now).concat(
+        state.logs.filter((log) => log.roomId === room.roomId)
+      )
+    };
+  });
 }
 
 function createMockParticipants(

@@ -258,7 +258,13 @@ body::selection {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+  padding: 0.25rem;
+  background: rgba(0, 0, 0, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px);
 }
 
 .lobby-nav-item {
@@ -267,10 +273,10 @@ body::selection {
   gap: 0.45rem;
   min-width: 5.5rem;
   justify-content: center;
-  border-bottom: 1px solid transparent;
-  padding: 0.75rem 0.85rem;
+  border-radius: 999px;
+  padding: 0.65rem 0.85rem;
   color: rgba(250, 250, 249, 0.72);
-  font-size: 0.95rem;
+  font-size: 0.86rem;
   font-weight: 800;
   transition:
     color 220ms ease,
@@ -280,17 +286,17 @@ body::selection {
 
 .lobby-nav-item:hover,
 .lobby-nav-item-active {
-  border-color: rgba(253, 230, 138, 0.62);
   color: rgb(255, 251, 235);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .focus-panel {
   position: absolute;
-  top: 6.5rem;
+  top: 5.2rem;
   left: 0;
   z-index: 20;
   display: grid;
-  width: 20rem;
+  width: 17.5rem;
   gap: 1rem;
   border-radius: 1.75rem;
   padding: 1.35rem;
@@ -312,7 +318,7 @@ body::selection {
 
 .focus-panel-collapsed {
   position: absolute;
-  top: 6.5rem;
+  top: 5.2rem;
   left: 0;
   z-index: 20;
   display: grid;
@@ -323,64 +329,85 @@ body::selection {
   font-size: 1.35rem;
 }
 
+@media (min-width: 1024px) and (max-width: 1420px) {
+  .focus-panel {
+    width: 16rem;
+    padding: 1rem;
+  }
+
+  .lobby-status-cluster {
+    position: static;
+    width: min(42rem, 100%);
+    margin: 0 auto;
+  }
+}
+
 .lobby-status-cluster {
   position: absolute;
   right: 0;
-  top: 5.75rem;
+  top: 5.1rem;
   z-index: 15;
   display: grid;
-  width: min(26rem, 34vw);
+  width: min(31.5rem, 38vw);
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
-.weather-strip {
-  position: absolute;
-  right: 0;
-  top: 12rem;
-  z-index: 15;
-  display: flex;
-  width: min(34rem, 42vw);
+.lobby-status-cluster > .glass-panel {
+  display: grid;
+  min-height: 5.4rem;
   align-items: center;
-  gap: 0.75rem;
-  border-radius: 1.45rem;
-  padding: 0.75rem;
+  border-radius: 1.35rem;
+  padding: 1rem;
+}
+
+.lobby-weather-grid {
+  width: min(45rem, 100%);
+  margin: -0.4rem auto 0;
 }
 
 .weather-cities {
   display: grid;
-  grid-template-columns: repeat(5, minmax(5.25rem, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(5, minmax(6.4rem, 1fr));
+  gap: 0.75rem;
   overflow-x: auto;
 }
 
 .weather-cities-compact {
-  grid-template-columns: repeat(5, minmax(4.75rem, 1fr));
+  grid-template-columns: repeat(5, minmax(6.15rem, 1fr));
 }
 
 .weather-city {
   display: flex;
-  min-width: 5.25rem;
+  min-width: 6.15rem;
+  min-height: 4.85rem;
   align-items: center;
-  gap: 0.45rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 1rem;
-  background: rgba(0, 0, 0, 0.26);
-  padding: 0.55rem;
+  justify-content: center;
+  gap: 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.035)),
+    rgba(0, 0, 0, 0.28);
+  padding: 0.72rem;
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px);
 }
 
 .lobby-room-grid {
   display: grid;
-  gap: 1rem;
-  margin-top: 1.25rem;
+  gap: 1.45rem;
+  margin-top: 0.65rem;
 }
 
 .lobby-room-card {
   position: relative;
-  min-height: 21rem;
+  min-height: 19rem;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 2rem;
+  border-radius: 1.75rem;
   background: rgba(0, 0, 0, 0.32);
   box-shadow:
     0 30px 90px rgba(0, 0, 0, 0.42),
@@ -389,6 +416,56 @@ body::selection {
     transform 280ms ease,
     border-color 280ms ease,
     box-shadow 280ms ease;
+}
+
+.lobby-room-content {
+  min-height: 12rem;
+}
+
+.lobby-room-main {
+  min-height: 5.4rem;
+}
+
+.live-preview-dock {
+  position: fixed;
+  z-index: 42;
+  display: grid;
+  width: 15rem;
+  grid-template-columns: 5.2rem 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  border-radius: 1.45rem;
+  padding: 0.72rem;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.live-preview-dock:active {
+  cursor: grabbing;
+}
+
+.live-preview-screen {
+  position: relative;
+  display: grid;
+  height: 3.35rem;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 1rem;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(253, 230, 138, 0.32), transparent 34%),
+    linear-gradient(135deg, rgba(18, 24, 28, 0.92), rgba(8, 10, 12, 0.86));
+}
+
+.live-preview-pulse {
+  position: absolute;
+  top: 0.7rem;
+  left: 0.75rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: rgb(248, 113, 113);
+  box-shadow: 0 0 24px rgb(248, 113, 113);
 }
 
 .lobby-room-card:hover {
@@ -414,12 +491,12 @@ body::selection {
 
   .lobby-room-card-top {
     grid-column: span 2 / span 2;
-    min-height: 21rem;
+    min-height: 19rem;
   }
 
   .lobby-room-card-bottom {
     grid-column: span 3 / span 3;
-    min-height: 17rem;
+    min-height: 17.2rem;
   }
 }
 
@@ -430,8 +507,7 @@ body::selection {
     grid-template-columns: 1fr;
   }
 
-  .weather-strip {
-    position: static;
+  .lobby-weather-grid {
     width: 100%;
   }
 
@@ -444,6 +520,10 @@ body::selection {
 
   .room-map {
     aspect-ratio: 3 / 2;
+  }
+
+  .lobby-room-grid {
+    gap: 1rem;
   }
 }
 
@@ -481,6 +561,31 @@ body::selection {
 
   .focus-panel {
     width: calc(100vw - 2rem);
+  }
+
+  .lobby-status-cluster {
+    grid-template-columns: 1fr;
+  }
+
+  .weather-cities,
+  .weather-cities-compact {
+    grid-template-columns: repeat(5, minmax(5.7rem, 1fr));
+  }
+
+  .weather-city {
+    min-width: 5.7rem;
+  }
+
+  .lobby-room-card {
+    min-height: 18rem;
+    border-radius: 1.5rem;
+  }
+
+  .live-preview-dock {
+    right: 1rem !important;
+    bottom: 6.25rem !important;
+    width: 13.5rem;
+    grid-template-columns: 4.6rem 1fr;
   }
 
   .lobby-footer-nav {

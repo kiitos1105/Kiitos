@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { signIn, signOut, useSession } from "next-auth/react";
+import type { PointerEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { HeaderNavigation } from "@/components/HeaderNavigation";
 import { WeatherCities } from "@/components/WeatherCities";
@@ -12,13 +14,14 @@ import {
   getUserProfile,
   getUserBadges,
   playBadgeSound,
+  saveUserProfile,
   type BadgeNotification
 } from "@/lib/badges-client";
+import { isPremiumUiEnabled } from "@/lib/app-stage";
 import { addXp, getFocusTreeSummary, getLevelProgress } from "@/lib/level-client";
-import { getCurrentPlan, seedDemoCustomRooms } from "@/lib/premium-client";
+import { getCurrentPlan, hasCustomRoomAccess, seedDemoCustomRooms } from "@/lib/premium-client";
 import { getRoomConfig } from "@/lib/room-config";
 import { formatDuration } from "@/lib/time";
-import { getRotatingWeather } from "@/lib/weather";
 import { getRoomDetails } from "@/lib/work-room";
 import {
   GOAL_OPTIONS,
@@ -38,18 +41,18 @@ type DiscordUser = {
 };
 
 export default function LobbyPage() {
-  const rooms = useMemo(() => getRoomDetails(), []);
+  const { data: session, status: authStatus } = useSession();
+  const [rooms, setRooms] = useState(() => getRoomDetails());
   const [focusPanelOpen, setFocusPanelOpen] = useState(true);
   const [navPanel, setNavPanel] = useState<string | null>(null);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [premiumModalOpen, setPremiumModalOpen] = useState(false);
   const [premium, setPremium] = useState(false);
+  const [customRoomAccess, setCustomRoomAccessState] = useState(false);
   const [discordUser, setDiscordUser] = useState<DiscordUser | null>(null);
   const [badgeNotice, setBadgeNotice] = useState<BadgeNotification | null>(null);
   const [engagementProfile, setEngagementProfile] = useState(getEngagementProfile());
   const [, setTick] = useState(0);
   const now = new Date();
-  const weather = getRotatingWeather(now);
   const totalParticipants = rooms.reduce((sum, room) => sum + room.participants.length, 0);
   const totalFocusSeconds = rooms.reduce(
     (roomSum, room) =>
@@ -57,26 +60,69 @@ export default function LobbyPage() {
     0
   );
   const myFocusSeconds = 4 * 60 * 60 + 23 * 60;
+  const premiumUiEnabled = isPremiumUiEnabled();
+  const sessionUser = useMemo(
+    () =>
+      session?.user?.id && session.user.name
+        ? {
+            id: session.user.id,
+            name: session.user.name,
+            avatarUrl: session.user.image ?? "https://cdn.discordapp.com/embed/avatars/0.png"
+          }
+        : null,
+    [session?.user?.id, session?.user?.image, session?.user?.name]
+  );
 
   useEffect(() => {
     const saved = window.localStorage.getItem(FOCUS_PANEL_STORAGE_KEY);
     const shouldCollapseForSmallScreen = window.matchMedia("(max-width: 760px)").matches;
     setFocusPanelOpen(saved ? saved === "open" : !shouldCollapseForSmallScreen);
     setPremium(getCurrentPlan() === "premium");
+    setCustomRoomAccessState(hasCustomRoomAccess());
     const savedDiscordUser = window.localStorage.getItem(DISCORD_USER_STORAGE_KEY);
     setDiscordUser(savedDiscordUser ? (JSON.parse(savedDiscordUser) as DiscordUser) : null);
     setEngagementProfile(getEngagementProfile());
     seedDemoCustomRooms();
 
     const timer = window.setInterval(() => setTick((value) => value + 1), 1000);
-    const syncPlan = () => setPremium(getCurrentPlan() === "premium");
+    const syncPlan = () => {
+      setPremium(getCurrentPlan() === "premium");
+      setCustomRoomAccessState(hasCustomRoomAccess());
+    };
+    const syncRooms = () => setRooms(getRoomDetails());
     window.addEventListener("storage", syncPlan);
+    window.addEventListener("storage", syncRooms);
+    window.addEventListener("kiitos:admin-users-change", syncRooms);
 
     return () => {
       window.clearInterval(timer);
       window.removeEventListener("storage", syncPlan);
+      window.removeEventListener("storage", syncRooms);
+      window.removeEventListener("kiitos:admin-users-change", syncRooms);
     };
   }, []);
+
+  useEffect(() => {
+    if (!sessionUser) {
+      return;
+    }
+
+    window.localStorage.setItem(DISCORD_USER_STORAGE_KEY, JSON.stringify(sessionUser));
+    setDiscordUser(sessionUser);
+    saveUserProfile({
+      ...getUserProfile(),
+      user_id: sessionUser.id,
+      avatar_url: sessionUser.avatarUrl
+    });
+    const notice = ensureFounderBadge();
+    addXp(5);
+    if (notice) {
+      addXp(500);
+      playBadgeSound();
+      setBadgeNotice(notice);
+      window.setTimeout(() => setBadgeNotice(null), 5200);
+    }
+  }, [session?.user?.id, session?.user?.image, session?.user?.name, sessionUser]);
 
   function toggleFocusPanel() {
     setFocusPanelOpen((current) => {
@@ -86,27 +132,24 @@ export default function LobbyPage() {
     });
   }
 
-  function loginWithDiscordDemo() {
-    const user = {
-      id: "discord-demo-user",
-      name: "Demo Discord",
-      avatarUrl: "https://cdn.discordapp.com/embed/avatars/0.png"
-    };
-    window.localStorage.setItem(DISCORD_USER_STORAGE_KEY, JSON.stringify(user));
-    setDiscordUser(user);
-    const notice = ensureFounderBadge();
-    addXp(5);
-    if (notice) {
-      addXp(500);
-      playBadgeSound();
-      setBadgeNotice(notice);
-      window.setTimeout(() => setBadgeNotice(null), 5200);
+  async function loginWithDiscord() {
+    try {
+      const response = await fetch("/api/auth/providers", { cache: "no-store" });
+      const providers = response.ok ? ((await response.json()) as Record<string, unknown>) : {};
+      if (!providers.discord) {
+        window.location.href = "/auth/error?error=DiscordConfigMissing";
+        return;
+      }
+      await signIn("discord", { callbackUrl: "/lobby", redirectTo: "/lobby" });
+    } catch {
+      window.location.href = "/auth/error?error=DiscordConfigMissing";
     }
   }
 
-  function logoutDiscordDemo() {
+  function logoutDiscord() {
     window.localStorage.removeItem(DISCORD_USER_STORAGE_KEY);
     setDiscordUser(null);
+    void signOut({ callbackUrl: "/lobby", redirectTo: "/lobby" });
   }
 
   function updateGoal(todayGoal: TodayGoal) {
@@ -126,14 +169,14 @@ export default function LobbyPage() {
       <LobbyBackground />
       {badgeNotice ? <LobbyBadgeToast notice={badgeNotice} /> : null}
 
-      <section className="relative z-10 mx-auto grid min-h-screen w-full max-w-[1820px] grid-rows-[auto_1fr_auto] gap-5 px-5 py-5 lg:px-8">
+      <section className="relative z-10 mx-auto grid min-h-screen w-full max-w-[1680px] grid-rows-[auto_1fr_auto] gap-8 px-5 py-6 sm:px-7 lg:px-10 xl:px-12">
         <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-          <Link className="flex items-center gap-3 justify-self-start" href="/lobby">
-            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-sky-400/90 text-xl font-black text-stone-950">
-              K
+          <Link className="justify-self-start" href="/lobby">
+            <span className="block text-[0.78rem] font-black uppercase tracking-[0.24em] text-sky-100/72">
+              Kiitos
             </span>
-            <span className="hidden text-xl font-black text-sky-100/90 sm:inline">
-              Kiitos Work Room
+            <span className="hidden text-sm font-bold text-stone-100/55 sm:block">
+              Work Room
             </span>
           </Link>
 
@@ -147,7 +190,7 @@ export default function LobbyPage() {
             >
               🔔
             </button>
-            {premium ? (
+            {premiumUiEnabled && premium ? (
               <Link
                 className="rounded-full border border-amber-100/30 bg-amber-100/14 px-4 py-2 text-sm font-black text-amber-100"
                 href="/pricing"
@@ -155,16 +198,22 @@ export default function LobbyPage() {
                 Premium
               </Link>
             ) : null}
+            {!premiumUiEnabled ? (
+              <span className="rounded-full border border-emerald-100/25 bg-emerald-100/12 px-4 py-2 text-sm font-black text-emerald-100">
+                Beta Tester
+              </span>
+            ) : null}
             <DiscordAccountButton
-              onLogin={loginWithDiscordDemo}
-              onLogout={logoutDiscordDemo}
+              loading={authStatus === "loading"}
+              onLogin={loginWithDiscord}
+              onLogout={logoutDiscord}
               premium={premium}
-              user={discordUser}
+              user={sessionUser ?? discordUser}
             />
           </div>
         </header>
 
-        <section className="relative grid min-h-0 gap-5 pt-2">
+        <section className="relative grid min-h-0 gap-7 pt-1">
           <CollapsibleFocusPanel
             myFocusSeconds={myFocusSeconds}
             onToggle={toggleFocusPanel}
@@ -173,23 +222,23 @@ export default function LobbyPage() {
             totalParticipants={totalParticipants}
           />
 
-          <div className="mx-auto max-w-4xl text-center">
-            <p className="font-serif text-2xl italic tracking-normal text-amber-100/46">
+          <div className="mx-auto max-w-3xl pt-6 text-center lg:pt-8">
+            <p className="font-serif text-lg italic tracking-normal text-amber-100/46 sm:text-xl">
               Find ☕ focus.
             </p>
-            <h1 className="mt-1 text-[clamp(3.8rem,6vw,7.7rem)] font-black leading-none text-amber-50">
+            <h1 className="mt-3 text-[clamp(2.9rem,4.4vw,5.15rem)] font-black leading-[0.95] text-amber-50">
               Choose Your Room
             </h1>
-            <p className="mt-4 text-lg font-semibold text-stone-100/68">
+            <p className="mx-auto mt-4 max-w-xl text-base font-semibold text-stone-100/66 sm:text-lg">
               今日の気分に合わせて、作業する場所を選ぼう。
             </p>
           </div>
 
-          <section className="mx-auto grid w-full max-w-5xl gap-3 rounded-[2rem] border border-white/10 bg-black/26 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-2xl lg:grid-cols-[1fr_1.5fr_auto]">
+          <section className="lobby-intent-panel mx-auto grid w-full max-w-5xl gap-3 rounded-[1.75rem] border border-white/10 bg-black/26 p-3 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-2xl md:grid-cols-[1fr_1fr_auto]">
             <label className="grid gap-2 text-xs font-black uppercase text-amber-100/60">
               今日の目標
               <select
-                className="rounded-2xl border border-white/10 bg-black/45 px-4 py-3 text-sm font-black text-stone-50 outline-none"
+                className="h-12 rounded-2xl border border-white/10 bg-black/45 px-4 text-sm font-black text-stone-50 outline-none"
                 onChange={(event) => updateGoal(event.target.value as TodayGoal)}
                 value={engagementProfile.todayGoal}
               >
@@ -203,12 +252,12 @@ export default function LobbyPage() {
             <label className="grid gap-2 text-xs font-black uppercase text-amber-100/60">
               今日の一言
               <input
-                className="rounded-2xl border border-white/10 bg-black/45 px-4 py-3 text-sm font-bold text-stone-50 outline-none"
+                className="h-12 rounded-2xl border border-white/10 bg-black/45 px-4 text-sm font-bold text-stone-50 outline-none"
                 onChange={(event) => updateMessage(event.target.value)}
                 value={engagementProfile.todayMessage}
               />
             </label>
-            <div className="rounded-2xl border border-amber-100/20 bg-amber-100/10 px-4 py-3">
+            <div className="grid h-full min-h-[4.75rem] content-center rounded-2xl border border-amber-100/20 bg-amber-100/10 px-4 py-3">
               <p className="text-xs font-black uppercase text-amber-100/60">Streak</p>
               <p className="mt-1 text-lg font-black text-amber-100">
                 🔥 {engagementProfile.streakDays}日連続
@@ -220,18 +269,15 @@ export default function LobbyPage() {
             <StatusTile icon="♪" label="BGM" value="Lo-Fi Rain" sub="soft cafe mix" />
             <StatusTile
               icon="☁"
-              label={weather.area}
-              value={weather.condition}
-              sub={`${weather.temperature} / ${weather.note}`}
+              label="Weather"
+              value="Live Japan"
+              sub="5都市を自動更新"
             />
             <StatusTile icon="◷" label="Time" value={formatClock(now)} sub="Japan time" />
           </aside>
 
-          <section className="weather-strip glass-panel">
-            <p className="shrink-0 text-xs font-black uppercase tracking-normal text-amber-100/60">
-              Weather
-            </p>
-            <WeatherCities compact />
+          <section className="lobby-weather-grid">
+            <WeatherCities compact minimal />
           </section>
 
           <section className="lobby-room-grid">
@@ -256,10 +302,12 @@ export default function LobbyPage() {
                     className={`absolute inset-x-0 top-0 h-24 bg-gradient-to-b ${config.accent.glow} to-transparent`}
                   />
 
-                  <article className="relative z-10 flex h-full flex-col justify-end p-6">
-                    <div className="flex items-end justify-between gap-4">
+                  <article className="lobby-room-content relative z-10 flex h-full flex-col justify-end p-6">
+                    <div className="lobby-room-main flex items-end justify-between gap-4">
                       <div className="min-w-0">
-                        <h2 className="truncate text-4xl font-black leading-none">{config.name}</h2>
+                        <h2 className="truncate text-[2rem] font-black leading-none">
+                          {config.name}
+                        </h2>
                         <p className="mt-3 line-clamp-2 text-sm font-semibold leading-6 text-stone-100/72">
                           {config.description}
                         </p>
@@ -270,13 +318,12 @@ export default function LobbyPage() {
                       </span>
                     </div>
 
-                    <div
-                      className={`mt-3 w-fit rounded-full border px-3 py-1 text-xs font-black ${congestion.className}`}
-                    >
-                      {congestion.label}
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <div className="mt-4 flex min-h-[2rem] flex-wrap items-center gap-2">
+                      <span
+                        className={`rounded-full border px-3 py-1 text-xs font-black ${congestion.className}`}
+                      >
+                        {congestion.label}
+                      </span>
                       {tags.map((tag) => (
                         <span
                           className="rounded-full border border-white/12 bg-black/32 px-3 py-1 text-xs font-black text-stone-100/70 backdrop-blur-xl"
@@ -299,27 +346,29 @@ export default function LobbyPage() {
               ✨ Custom Room
             </p>
             <h2 className="mt-2 text-2xl font-black text-amber-50 sm:text-3xl">
-              Create Your Own Room
+              Create Your Focus Room
             </h2>
             <p className="mt-2 text-sm font-bold text-stone-200/58">
-              Freeは1日1回Private Room、Premium Demoは無制限
+              β版ではPrivate Roomを1日1回作成できます。Custom Open Roomは管理者許可制です。
             </p>
-            {premium ? (
+            {customRoomAccess ? (
               <Link
                 className="mt-4 inline-flex rounded-full border border-amber-100/35 bg-amber-100 px-6 py-3 text-sm font-black text-stone-950 shadow-[0_0_44px_rgba(253,230,138,0.14)] transition hover:-translate-y-0.5"
                 href="/custom-room/new"
               >
-                ＋ Create Your Own Room
+                ＋ Custom / Private Room
               </Link>
             ) : (
               <Link
                 className="mt-4 rounded-full border border-white/12 bg-black/34 px-6 py-3 text-sm font-black text-stone-100/82 backdrop-blur-xl transition hover:border-amber-100/35 hover:bg-amber-100/10"
                 href="/custom-room/new"
               >
-                ＋ Free Private Room
+                ＋ Private Room
               </Link>
             )}
           </section>
+
+          <LivePreviewDock />
         </section>
 
         <footer className="lobby-footer-nav">
@@ -367,14 +416,10 @@ export default function LobbyPage() {
       </section>
 
       {navPanel ? <FeatureModal label={navPanel} onClose={() => setNavPanel(null)} /> : null}
-      {premiumModalOpen ? (
-        <PremiumRequiredModal onClose={() => setPremiumModalOpen(false)} />
-      ) : null}
       {activeMenu ? (
         <MenuModal
           label={activeMenu}
           onClose={() => setActiveMenu(null)}
-          premium={premium}
           totalFocusSeconds={totalFocusSeconds}
         />
       ) : null}
@@ -401,6 +446,49 @@ function MonthlyMvpPanel() {
         ランキングを見る
       </Link>
     </section>
+  );
+}
+
+function LivePreviewDock() {
+  const [position, setPosition] = useState({ x: 24, y: 24 });
+  const [dragging, setDragging] = useState(false);
+
+  function startDrag(event: PointerEvent<HTMLDivElement>) {
+    setDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function drag(event: PointerEvent<HTMLDivElement>) {
+    if (!dragging) return;
+    setPosition((current) => ({
+      x: Math.max(12, current.x - event.movementX),
+      y: Math.max(12, current.y - event.movementY)
+    }));
+  }
+
+  function endDrag() {
+    setDragging(false);
+  }
+
+  return (
+    <aside
+      className="live-preview-dock glass-panel"
+      onPointerDown={startDrag}
+      onPointerMove={drag}
+      onPointerUp={endDrag}
+      style={{ right: position.x, bottom: position.y }}
+    >
+      <div className="live-preview-screen">
+        <span className="live-preview-pulse" />
+        <span className="text-xs font-black uppercase tracking-[0.18em] text-white/72">Live</span>
+      </div>
+      <div className="min-w-0">
+        <p className="truncate text-sm font-black text-amber-50">Kiitos Room Cam</p>
+        <p className="mt-1 truncate text-[0.68rem] font-bold text-stone-300/55">
+          Drag to move
+        </p>
+      </div>
+    </aside>
   );
 }
 
@@ -528,11 +616,13 @@ function StatusTile({
 function DiscordAccountButton({
   user,
   premium,
+  loading,
   onLogin,
   onLogout
 }: {
   user: DiscordUser | null;
   premium: boolean;
+  loading: boolean;
   onLogin: () => void;
   onLogout: () => void;
 }) {
@@ -542,7 +632,7 @@ function DiscordAccountButton({
         className="flex items-center gap-3 rounded-full border border-white/12 bg-black/38 px-3 py-2 backdrop-blur-xl"
         onClick={onLogout}
         type="button"
-        title="Demoログアウト"
+        title="ログアウト"
       >
         <span
           aria-hidden="true"
@@ -550,9 +640,9 @@ function DiscordAccountButton({
           style={{ backgroundImage: `url(${user.avatarUrl})` }}
         />
         <span className="hidden font-black sm:inline">{user.name}</span>
-        {premium ? (
-          <span className="hidden text-xs font-black text-amber-100 sm:inline">Premium</span>
-        ) : null}
+        <span className="hidden text-xs font-black text-emerald-100 sm:inline">
+          {premium ? "Production Plan" : "Beta Tester"}
+        </span>
       </button>
     );
   }
@@ -560,10 +650,11 @@ function DiscordAccountButton({
   return (
     <button
       className="rounded-full border border-indigo-200/20 bg-indigo-300/12 px-4 py-3 text-sm font-black text-indigo-100 backdrop-blur-xl transition hover:bg-indigo-300/20"
+      disabled={loading}
       onClick={onLogin}
       type="button"
     >
-      Discordでログイン
+      {loading ? "確認中..." : "Discordでログイン"}
     </button>
   );
 }
@@ -579,8 +670,8 @@ function FeatureModal({ label, onClose }: { label: string; onClose: () => void }
       { title: "週間レポート", body: "Cafe Roomでの集中が多めです。" }
     ],
     Shop: [
-      { title: "Premium", body: "Custom Room作成をDemoで有効化できます。" },
-      { title: "Room Theme", body: "Nordic Cafe / Night Glass / Creator Neon" }
+      { title: "Room Theme", body: "Nordic Cafe / Night Glass / Creator Neon" },
+      { title: "Beta Items", body: "β版では家具・背景・BGMの検証アイテムを無料で試せる設計です。" }
     ],
     通知: [{ title: "通知", body: "入室、退出、アナウンス通知をここに表示します。" }]
   };
@@ -614,47 +705,16 @@ function FeatureModal({ label, onClose }: { label: string; onClose: () => void }
   );
 }
 
-function PremiumRequiredModal({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/58 p-6 backdrop-blur-xl">
-      <section className="glass-panel max-w-md rounded-[2rem] p-7 text-center">
-        <p className="text-sm font-black uppercase text-amber-100/60">Premium Feature</p>
-        <h2 className="mt-3 text-4xl font-black">Custom Open RoomはPremium限定です</h2>
-        <p className="mt-4 text-sm font-bold leading-6 text-stone-200/60">
-          Custom Open RoomはPremiumユーザー向けです。Demo Premiumを有効にするとすぐ使えます。
-        </p>
-        <div className="mt-6 flex justify-center gap-3">
-          <button
-            className="rounded-full border border-white/10 bg-white/8 px-5 py-3 font-black"
-            onClick={onClose}
-            type="button"
-          >
-            閉じる
-          </button>
-          <Link
-            className="rounded-full bg-amber-100 px-5 py-3 font-black text-stone-950"
-            href="/pricing"
-          >
-            Pricingへ
-          </Link>
-        </div>
-      </section>
-    </div>
-  );
-}
-
 function MenuModal({
   label,
   totalFocusSeconds,
-  premium,
   onClose
 }: {
   label: string;
   totalFocusSeconds: number;
-  premium: boolean;
   onClose: () => void;
 }) {
-  const content = getMenuContent(label, totalFocusSeconds, premium);
+  const content = getMenuContent(label, totalFocusSeconds);
   const favoriteBadges = getFavoriteBadges();
   const equippedTitle = getEquippedTitle();
   const profile = getUserProfile();
@@ -775,7 +835,7 @@ function MenuModal({
   );
 }
 
-function getMenuContent(label: string, totalFocusSeconds: number, premium: boolean) {
+function getMenuContent(label: string, totalFocusSeconds: number) {
   const focus = formatDuration(totalFocusSeconds);
   const map: Record<string, { title: string; body: string }[]> = {
     お知らせ: [
@@ -806,10 +866,8 @@ function getMenuContent(label: string, totalFocusSeconds: number, premium: boole
         body: "Discord OAuth接続後、Discord IDをuser_idとして紐づけます。"
       },
       {
-        title: "Premium",
-        body: premium
-          ? "Premium有効。Custom Open Roomを作成できます。"
-          : "Free。PricingからDemo Premiumを有効化できます。"
+        title: "Beta Tester",
+        body: "β版メンバーとして利用中です。Custom Open Roomは管理者が検証対象者へ許可できます。"
       },
       { title: "今日の集中時間", body: "4:23:00" },
       { title: "累計集中時間", body: "128:40:00" },

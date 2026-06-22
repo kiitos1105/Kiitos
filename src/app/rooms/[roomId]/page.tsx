@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { getEquippedTitle, getFavoriteBadges } from "@/lib/badges-client";
 import type { Badge, Title } from "@/lib/badges-client";
 import {
@@ -29,12 +29,12 @@ import { getRoomConfig } from "@/lib/room-config";
 import { getRoomSeatLayout } from "@/lib/roomSeatLayouts";
 import type { RoomSeatLayout } from "@/lib/roomSeatLayouts";
 import { formatDuration } from "@/lib/time";
-import { getRoomDetail } from "@/lib/work-room";
+import { getRoomDetail, readAdminUserState } from "@/lib/work-room";
 import type { Seat, SeatStatus } from "@/lib/work-room";
 
 export default function RoomPage() {
   const params = useParams<{ roomId: string }>();
-  const room = useMemo(() => getRoomDetail(params.roomId), [params.roomId]);
+  const [room, setRoom] = useState(() => getRoomDetail(params.roomId));
   const [selectedSeatId, setSelectedSeatId] = useState("A1");
   const [mySeatId, setMySeatId] = useState<string | null>(null);
   const [myStartedAt, setMyStartedAt] = useState<string | null>(null);
@@ -47,16 +47,33 @@ export default function RoomPage() {
   const [engagementProfile, setEngagementProfile] =
     useState<EngagementProfile>(getEngagementProfile());
   const [reactionLogs, setReactionLogs] = useState<ReactionLog[]>([]);
+  const [adminWarning, setAdminWarning] = useState<string | null>(null);
   const [, setTick] = useState(0);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setTick((value) => value + 1), 1000);
+    const syncRoom = () => setRoom(getRoomDetail(params.roomId));
+    const syncWarning = () => {
+      const latest = readAdminUserState().warnings[0];
+      setAdminWarning(latest ? `管理者から警告があります: ${latest.reason}` : null);
+    };
+    window.addEventListener("storage", syncRoom);
+    window.addEventListener("storage", syncWarning);
+    window.addEventListener("kiitos:admin-users-change", syncRoom);
+    window.addEventListener("kiitos:admin-users-change", syncWarning);
     setProfileTitle(getEquippedTitle());
     setFavoriteBadges(getFavoriteBadges());
     setLevelProgress(getLevelProgress());
     setEngagementProfile(getEngagementProfile());
-    return () => window.clearInterval(intervalId);
-  }, []);
+    syncWarning();
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("storage", syncRoom);
+      window.removeEventListener("storage", syncWarning);
+      window.removeEventListener("kiitos:admin-users-change", syncRoom);
+      window.removeEventListener("kiitos:admin-users-change", syncWarning);
+    };
+  }, [params.roomId]);
 
   useEffect(() => {
     fetch(`/api/seat-layouts?roomId=${params.roomId}`)
@@ -159,6 +176,11 @@ export default function RoomPage() {
   return (
     <main className="room-page relative min-h-screen overflow-hidden bg-cafe-950 text-stone-50">
       <RoomImageBackground roomId={room.roomId} image={config.image} />
+      {adminWarning ? (
+        <div className="fixed left-1/2 top-5 z-50 w-[min(92vw,520px)] -translate-x-1/2 rounded-3xl border border-amber-100/30 bg-black/70 p-4 text-center text-sm font-black text-amber-100 shadow-2xl backdrop-blur-2xl">
+          {adminWarning}
+        </div>
+      ) : null}
 
       <section className="room-shell relative z-10 mx-auto grid min-h-screen w-full max-w-[1800px] grid-rows-[auto_1fr] gap-5 px-5 py-5 lg:px-8">
         <header className="room-header glass-panel rounded-[2rem] px-5 py-4">

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { signIn, useSession } from "next-auth/react";
 import { useMemo, useState } from "react";
-import { getDiscordUser, getMonthlyMvp, getRankingUsers } from "@/lib/engagement-client";
+import { getMonthlyMvp, getRankingUsers } from "@/lib/engagement-client";
 import { formatDuration } from "@/lib/time";
 
 const PERIODS = [
@@ -13,10 +14,11 @@ const PERIODS = [
 ] as const;
 
 export default function RankingPage() {
+  const { data: session } = useSession();
   const [period, setPeriod] = useState<(typeof PERIODS)[number]["id"]>("today");
-  const discordUser = getDiscordUser();
   const users = useMemo(() => getRankingUsers(period), [period]);
   const mvp = getMonthlyMvp();
+  const loggedIn = Boolean(session?.user?.id);
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-cafe-950 p-6 text-stone-50">
@@ -39,9 +41,16 @@ export default function RankingPage() {
               Lobbyへ
             </Link>
           </div>
-          {!discordUser ? (
+          {!loggedIn ? (
             <div className="mt-6 rounded-2xl border border-amber-100/25 bg-amber-100/10 p-4 text-sm font-black text-amber-100">
-              ※ランキングインするにはディスコードにて連携が必要です。集中時間はローカル保存されます。
+              ※ランキングインするにはDiscord連携が必要です。集中時間はローカル保存されます。
+              <button
+                className="ml-3 rounded-full bg-amber-100 px-4 py-2 text-xs font-black text-stone-950"
+                onClick={() => void signIn("discord", { callbackUrl: "/ranking", redirectTo: "/ranking" })}
+                type="button"
+              >
+                Discordでログイン
+              </button>
             </div>
           ) : null}
         </header>
@@ -84,7 +93,7 @@ export default function RankingPage() {
         </nav>
 
         <section className="grid gap-3">
-          {users.map((user) => (
+          {users.filter((user) => loggedIn || user.id !== "me").map((user) => (
             <article
               className="glass-panel grid gap-4 rounded-[2rem] p-4 md:grid-cols-[72px_1fr_auto]"
               key={user.id}

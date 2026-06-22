@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import type { DisplayState } from "@/lib/types";
+import { getFallbackDisplayState } from "@/lib/work-room";
 
 const emptyState: DisplayState = {
   generatedAt: new Date().toISOString(),
@@ -98,10 +99,16 @@ export function useDisplayState() {
     subscribeRealtime();
 
     const fallbackIntervalId = window.setInterval(loadSafely, 30000);
+    const syncLocalAdminState = () => {
+      setState(getFallbackDisplayState());
+      setConnectionState("fallback");
+    };
+    window.addEventListener("kiitos:admin-users-change", syncLocalAdminState);
 
     return () => {
       mounted = false;
       window.clearInterval(fallbackIntervalId);
+      window.removeEventListener("kiitos:admin-users-change", syncLocalAdminState);
 
       if (supabaseBrowser && channel) {
         supabaseBrowser.removeChannel(channel);

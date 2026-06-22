@@ -1,28 +1,73 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AdminGuard } from "@/components/AdminGuard";
-import { MAJOR_CITY_WEATHER } from "@/lib/weather";
-
-type WeatherForm = {
-  area: string;
-  condition: string;
-  temperature: string;
-  icon: string;
-  enabled: boolean;
-};
+import {
+  getWeatherUiSettings,
+  saveWeatherUiSettings,
+  type WeatherUiSettings
+} from "@/components/WeatherCities";
+import { WEATHER_CITY_CONFIGS, type WeatherCityId, type WeatherItem } from "@/lib/weather";
 
 export default function AdminWeatherPage() {
-  const [items, setItems] = useState<WeatherForm[]>(
-    MAJOR_CITY_WEATHER.map((item) => ({ ...item, enabled: true }))
-  );
-  const [status, setStatus] = useState("5都市の天気ダミーデータを編集できます。");
+  const [settings, setSettings] = useState<WeatherUiSettings>({
+    enabledCityIds: WEATHER_CITY_CONFIGS.map((city) => city.id),
+    order: WEATHER_CITY_CONFIGS.map((city) => city.id),
+    refreshMinutes: 5
+  });
+  const [weather, setWeather] = useState<WeatherItem[]>([]);
+  const [status, setStatus] = useState("API状態を確認できます。");
 
-  function update(index: number, patch: Partial<WeatherForm>) {
-    setItems((current) =>
-      current.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item))
-    );
+  useEffect(() => {
+    setSettings(getWeatherUiSettings());
+    void refreshWeather();
+  }, []);
+
+  async function refreshWeather() {
+    setStatus("Open-Meteoから取得中...");
+    try {
+      const response = await fetch("/api/weather", { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("weather fetch failed");
+      }
+      setWeather((await response.json()) as WeatherItem[]);
+      setStatus("API取得に成功しました。");
+    } catch {
+      setStatus("天気情報を取得できませんでした。画面側はフォールバック表示を使います。");
+    }
   }
+
+  function toggleCity(cityId: WeatherCityId) {
+    setSettings((current) => {
+      const enabled = current.enabledCityIds.includes(cityId);
+      return {
+        ...current,
+        enabledCityIds: enabled
+          ? current.enabledCityIds.filter((id) => id !== cityId)
+          : [...current.enabledCityIds, cityId]
+      };
+    });
+  }
+
+  function move(cityId: WeatherCityId, direction: -1 | 1) {
+    setSettings((current) => {
+      const order = [...current.order];
+      const index = order.indexOf(cityId);
+      const nextIndex = index + direction;
+      if (index < 0 || nextIndex < 0 || nextIndex >= order.length) {
+        return current;
+      }
+      [order[index], order[nextIndex]] = [order[nextIndex], order[index]];
+      return { ...current, order };
+    });
+  }
+
+  function save() {
+    saveWeatherUiSettings(settings);
+    setStatus("保存しました。表示中の天気カードへ反映されます。");
+  }
+
+  const weatherById = new Map(weather.map((item) => [item.cityId, item]));
 
   return (
     <AdminGuard>
@@ -34,77 +79,99 @@ export default function AdminWeatherPage() {
             <p className="mt-3 text-sm font-bold text-stone-200/55">{status}</p>
           </header>
 
-          <section className="grid gap-4">
-            {items.map((item, index) => (
-              <article
-                className="glass-panel grid gap-4 rounded-[2rem] p-5 lg:grid-cols-[120px_1fr_1fr_100px_120px]"
-                key={item.area}
-              >
-                <label className="flex items-center gap-2 text-sm font-black">
-                  <input
-                    checked={item.enabled}
-                    onChange={(event) => update(index, { enabled: event.target.checked })}
-                    type="checkbox"
-                  />
-                  {item.area}
-                </label>
-                <Field
-                  label="天気"
-                  onChange={(value) => update(index, { condition: value })}
-                  value={item.condition}
-                />
-                <Field
-                  label="気温"
-                  onChange={(value) => update(index, { temperature: value })}
-                  value={item.temperature}
-                />
-                <Field
-                  label="アイコン"
-                  onChange={(value) => update(index, { icon: value })}
-                  value={item.icon}
-                />
-                <div className="rounded-2xl border border-white/10 bg-black/24 px-4 py-3">
-                  <p className="text-xs font-black text-stone-300/45">Preview</p>
-                  <p className="mt-1 text-lg font-black text-amber-100">
-                    {item.enabled ? `${item.icon} ${item.condition} ${item.temperature}` : "OFF"}
-                  </p>
-                </div>
-              </article>
-            ))}
+          <section className="glass-panel rounded-[2rem] p-5">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <label className="grid gap-2 text-sm font-black text-stone-200/65">
+                更新間隔
+                <select
+                  className="rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-stone-50 outline-none"
+                  onChange={(event) =>
+                    setSettings({ ...settings, refreshMinutes: Number(event.target.value) })
+                  }
+                  value={settings.refreshMinutes}
+                >
+                  <option value={5}>5分</option>
+                  <option value={10}>10分</option>
+                </select>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className="rounded-2xl border border-white/10 bg-white/8 px-5 py-3 font-black"
+                  onClick={() => void refreshWeather()}
+                  type="button"
+                >
+                  手動更新
+                </button>
+                <button
+                  className="rounded-2xl bg-amber-100 px-5 py-3 font-black text-stone-950"
+                  onClick={save}
+                  type="button"
+                >
+                  天気設定を保存
+                </button>
+              </div>
+            </div>
           </section>
 
-          <button
-            className="rounded-2xl bg-amber-100 px-6 py-4 font-black text-stone-950"
-            onClick={() =>
-              setStatus("保存しました。MVPでは画面内のダミー設定として保持しています。")
-            }
-            type="button"
-          >
-            天気設定を保存
-          </button>
+          <section className="grid gap-4">
+            {settings.order.map((cityId) => {
+              const config = WEATHER_CITY_CONFIGS.find((city) => city.id === cityId);
+              if (!config) return null;
+              const item = weatherById.get(cityId);
+              const enabled = settings.enabledCityIds.includes(cityId);
+
+              return (
+                <article
+                  className="glass-panel grid gap-4 rounded-[2rem] p-5 lg:grid-cols-[1fr_auto_auto_auto]"
+                  key={cityId}
+                >
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 text-sm font-black">
+                      <input
+                        checked={enabled}
+                        onChange={() => toggleCity(cityId)}
+                        type="checkbox"
+                      />
+                      表示
+                    </label>
+                    <div>
+                      <h2 className="text-2xl font-black">{config.city}</h2>
+                      <p className="mt-1 text-sm font-bold text-stone-200/58">
+                        {item
+                          ? `${item.icon} ${item.weather} / ${item.temp}℃ / 降水 ${item.precipitation}mm`
+                          : "未取得"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 font-black"
+                    onClick={() => move(cityId, -1)}
+                    type="button"
+                  >
+                    上へ
+                  </button>
+                  <button
+                    className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 font-black"
+                    onClick={() => move(cityId, 1)}
+                    type="button"
+                  >
+                    下へ
+                  </button>
+                  <span
+                    className={`rounded-2xl border px-4 py-3 text-center font-black ${
+                      enabled
+                        ? "border-emerald-100/25 bg-emerald-100/10 text-emerald-100"
+                        : "border-white/10 bg-black/24 text-stone-400"
+                    }`}
+                  >
+                    {enabled ? "ON" : "OFF"}
+                  </span>
+                </article>
+              );
+            })}
+          </section>
         </section>
       </main>
     </AdminGuard>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <label className="grid gap-2 text-sm font-black text-stone-200/65">
-      {label}
-      <input
-        className="rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-stone-50 outline-none"
-        onChange={(event) => onChange(event.target.value)}
-        value={value}
-      />
-    </label>
   );
 }
