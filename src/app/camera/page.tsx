@@ -56,7 +56,6 @@ export default function CameraPage() {
         className={`absolute inset-0 bg-gradient-to-br ${config.accent.glow} via-transparent to-black/80 transition-all duration-1000`}
       />
       <div className="wood-grain pointer-events-none fixed inset-x-0 bottom-0 h-[26vh] opacity-45" />
-      <div className="rain-layer pointer-events-none fixed inset-0 opacity-16" />
 
       <section className="relative z-10 grid min-h-[calc(100vh-4rem)] grid-cols-[1fr_360px] gap-6">
         <div className="glass-panel camera-frame relative overflow-hidden rounded-[2.5rem] p-8">
@@ -98,6 +97,22 @@ export default function CameraPage() {
               <WeatherCities compact />
             </div>
 
+            <div className="rounded-3xl border border-white/10 bg-black/28 p-4">
+              <p className="mb-3 text-xs font-black uppercase tracking-normal text-stone-300/45">
+                🎤 VC参加者
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {["Mika", "Sora", "Aoi"].map((name, index) => (
+                  <span
+                    className="rounded-full border border-white/10 bg-black/30 px-3 py-2 text-xs font-black"
+                    key={name}
+                  >
+                    {index === 0 ? "🎙" : "🔇"} {name}
+                  </span>
+                ))}
+              </div>
+            </div>
+
             <div className="grid grid-cols-5 gap-3">
               {activeRoom.seats.map((seat) => (
                 <div
@@ -111,6 +126,11 @@ export default function CameraPage() {
                   key={seat.id}
                 >
                   <p className="font-mono text-xl font-black">{seat.id}</p>
+                  {seat.user ? (
+                    <p className="mt-1 text-[0.65rem] font-black uppercase text-amber-100/70">
+                      Lv.{Math.max(1, 10 + seat.user.displayName.length)}
+                    </p>
+                  ) : null}
                   <p className="mt-1 truncate text-xs font-bold text-stone-300/48">
                     {seat.user?.displayName ?? seat.zone}
                   </p>

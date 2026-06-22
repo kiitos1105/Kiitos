@@ -25,7 +25,7 @@ export function getAdminSettings() {
 }
 
 export function verifyAdminPassword(password: string) {
-  const expected = process.env.ADMIN_PASSWORD || "Takemasa1105";
+  const expected = process.env.ADMIN_PASSWORD || "1";
   return Boolean(expected) && password === expected;
 }
 

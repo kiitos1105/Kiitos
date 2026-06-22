@@ -4,25 +4,25 @@ export type HeaderNavigationItem = {
   label: string;
   href?: string;
   icon: string;
-  comingSoon?: boolean;
+  panel?: boolean;
 };
 
 const DEFAULT_ITEMS: HeaderNavigationItem[] = [
   { label: "Home", href: "/lobby", icon: "⌂" },
   { label: "Rooms", href: "/rooms", icon: "▦" },
-  { label: "Friends", icon: "◌", comingSoon: true },
-  { label: "Stats", icon: "◷", comingSoon: true },
-  { label: "Shop", icon: "◇", comingSoon: true }
+  { label: "Friends", href: "/friends", icon: "◌" },
+  { label: "Stats", icon: "◷", panel: true },
+  { label: "Shop", icon: "◇", panel: true }
 ];
 
 export function HeaderNavigation({
   items = DEFAULT_ITEMS,
   activeLabel = "Home",
-  onComingSoon
+  onPanelOpen
 }: {
   items?: HeaderNavigationItem[];
   activeLabel?: string;
-  onComingSoon?: (label: string) => void;
+  onPanelOpen?: (label: string) => void;
 }) {
   return (
     <nav className="lobby-nav" aria-label="Main navigation">
@@ -30,12 +30,12 @@ export function HeaderNavigation({
         const active = item.label === activeLabel;
         const className = `lobby-nav-item ${active ? "lobby-nav-item-active" : ""}`;
 
-        if (item.comingSoon || !item.href) {
+        if (item.panel || !item.href) {
           return (
             <button
               className={className}
               key={item.label}
-              onClick={() => onComingSoon?.(item.label)}
+              onClick={() => onPanelOpen?.(item.label)}
               type="button"
             >
               <span>{item.icon}</span>

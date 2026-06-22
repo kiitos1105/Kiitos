@@ -9,12 +9,31 @@ const MENU = [
     primary: true
   },
   { title: "参加者管理", href: "/admin/users", description: "強制退出、警告、BAN、部屋移動。" },
-  { title: "部屋管理", href: "/admin", description: "部屋のON/OFFや全体状態を確認。" },
+  { title: "部屋管理", href: "/admin/rooms", description: "部屋ON/OFF、名前、説明、BGM、定員。" },
+  {
+    title: "Custom Room管理",
+    href: "/admin/custom-rooms",
+    description: "Premiumユーザーの作成部屋を編集・削除・公開停止。"
+  },
   { title: "警告/BAN", href: "/admin/users", description: "荒らし対策と操作履歴の記録。" },
+  { title: "バッジ管理", href: "/admin/badges", description: "バッジ作成、付与、剥奪、条件編集。" },
+  { title: "称号管理", href: "/admin/titles", description: "称号作成、装備候補、手動付与と剥奪。" },
   { title: "定点カメラ設定", href: "/admin/camera", description: "巡回秒数と優先表示を調整。" },
-  { title: "アナウンス", href: "/admin", description: "全体・部屋別のお知らせ。" },
-  { title: "天気設定", href: "/admin", description: "現在はダミー天気。API差し替え予定。" },
-  { title: "Bot設定", href: "/admin", description: "Discord / YouTube Bot連携準備。" }
+  { title: "アナウンス", href: "/admin/announcements", description: "全体・部屋別のお知らせ。" },
+  { title: "天気設定", href: "/admin/weather", description: "5都市の天気ダミーデータ編集。" },
+  { title: "Bot設定", href: "/admin/bots", description: "Discord / YouTube Bot連携準備。" },
+  {
+    title: "ランキング管理",
+    href: "/admin/rankings",
+    description: "ランキング、MVP、表示順位を確認。"
+  },
+  { title: "MVP設定", href: "/admin/mvp", description: "月間MVPとRoom MVPを手動設定。" },
+  { title: "証明書確認", href: "/admin/certificates", description: "集中証明書の発行状況を確認。" },
+  {
+    title: "フレンド/通報",
+    href: "/admin/social",
+    description: "フレンド申請、通報、リアクションログ確認。"
+  }
 ];
 
 export default function AdminDashboardPage() {

@@ -69,20 +69,6 @@ body::selection {
   filter: blur(8px);
 }
 
-.rain-layer {
-  opacity: 0.22;
-  background-image:
-    linear-gradient(115deg, transparent 0 42%, rgba(218, 235, 244, 0.42) 46%, transparent 52%),
-    linear-gradient(115deg, transparent 0 42%, rgba(218, 235, 244, 0.28) 46%, transparent 52%);
-  background-position:
-    0 0,
-    46px 72px;
-  background-size:
-    120px 180px,
-    180px 240px;
-  animation: rain-fall 1.8s linear infinite;
-}
-
 .pomodoro-ring {
   border-radius: 999px;
   background:
@@ -128,7 +114,9 @@ body::selection {
 
 .room-map {
   position: relative;
-  min-height: 620px;
+  width: 100%;
+  min-height: auto;
+  aspect-ratio: 3 / 2;
   overflow: hidden;
   border-radius: 2.5rem;
 }
@@ -140,6 +128,7 @@ body::selection {
 }
 
 .room-map-image {
+  background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
 }
@@ -186,31 +175,75 @@ body::selection {
 }
 
 .seat-hotspot {
+  z-index: 25;
+  display: grid;
+  place-items: center;
   cursor: pointer;
-  border: 1px solid transparent;
-  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.16);
+  box-shadow:
+    inset 0 0 16px rgba(255, 255, 255, 0.08),
+    0 0 24px rgba(0, 0, 0, 0.28);
   outline: none;
+  backdrop-filter: blur(3px);
 }
 
 .seat-hotspot:hover,
 .seat-hotspot:focus-visible {
-  border-color: rgba(253, 230, 138, 0.45);
-  background: rgba(253, 230, 138, 0.08);
-  box-shadow: 0 0 36px rgba(253, 230, 138, 0.16);
+  z-index: 40;
+  border-color: rgba(253, 230, 138, 0.82);
+  background: rgba(253, 230, 138, 0.16);
+  box-shadow:
+    0 0 0 2px rgba(253, 230, 138, 0.18),
+    0 0 44px rgba(253, 230, 138, 0.32);
+  transform: translate(-50%, -50%) scale(1.06);
 }
 
 .seat-hotspot-selected {
-  border-color: rgba(253, 230, 138, 0.68);
-  background: rgba(253, 230, 138, 0.1);
-  box-shadow: 0 0 58px rgba(253, 230, 138, 0.24);
+  z-index: 35;
+  border-color: rgba(253, 230, 138, 0.9);
+  background: rgba(253, 230, 138, 0.18);
+  box-shadow:
+    0 0 0 2px rgba(253, 230, 138, 0.2),
+    0 0 62px rgba(253, 230, 138, 0.34);
 }
 
-.seat-hotspot-active {
-  border-color: rgba(255, 255, 255, 0.18);
+.seat-hotspot-available {
+  color: rgb(110, 231, 183);
+  border-color: rgba(110, 231, 183, 0.42);
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.seat-hotspot-occupied {
+  color: rgb(253, 164, 175);
+  border-color: rgba(253, 164, 175, 0.55);
+  background: rgba(244, 63, 94, 0.16);
+}
+
+.seat-hotspot-reserved {
+  color: rgb(125, 211, 252);
+  border-color: rgba(125, 211, 252, 0.5);
+  background: rgba(14, 165, 233, 0.12);
+}
+
+.seat-hotspot-mine {
+  color: rgb(253, 230, 138);
+  border-color: rgba(253, 230, 138, 0.9);
+  background: rgba(253, 230, 138, 0.2);
 }
 
 .seat-avatar {
   min-width: 5.25rem;
+}
+
+.seat-marker-dot {
+  width: 0.78rem;
+  height: 0.78rem;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow:
+    0 0 0 0.42rem color-mix(in srgb, currentColor 18%, transparent),
+    0 0 24px currentColor;
 }
 
 .home-background {
@@ -408,6 +441,10 @@ body::selection {
     top: 5.25rem;
     left: 1rem;
   }
+
+  .room-map {
+    aspect-ratio: 3 / 2;
+  }
 }
 
 @media (max-width: 760px) {
@@ -461,18 +498,13 @@ body::selection {
   }
 }
 
-@keyframes rain-fall {
-  from {
-    transform: translate3d(0, -120px, 0);
-  }
-
-  to {
-    transform: translate3d(-80px, 120px, 0);
-  }
-}
-
 .camera-frame {
   animation: camera-breathe 7s ease-in-out infinite alternate;
+}
+
+.animate-level-confetti {
+  top: -1rem;
+  animation: level-confetti-fall 1.8s ease-out forwards;
 }
 
 @keyframes camera-breathe {
@@ -482,5 +514,21 @@ body::selection {
 
   to {
     transform: scale(1.012) translate3d(-0.35rem, -0.25rem, 0);
+  }
+}
+
+@keyframes level-confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -1rem, 0) rotate(0deg) scale(0.7);
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(1.5rem, 22rem, 0) rotate(210deg) scale(1);
   }
 }

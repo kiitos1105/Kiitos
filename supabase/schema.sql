@@ -5,9 +5,42 @@ create table if not exists public.users (
   platform text not null check (platform in ('discord', 'youtube', 'web')),
   platform_user_id text not null,
   display_name text not null,
+  level integer not null default 1 check (level >= 1),
+  xp integer not null default 0 check (xp >= 0),
+  coin integer not null default 0 check (coin >= 0),
+  total_focus_time integer not null default 0 check (total_focus_time >= 0),
+  current_title text,
+  favorite_badges text[] not null default '{}',
+  focus_tree_stage text not null default 'Seed',
+  focus_tree_updated_at timestamptz,
+  today_goal text,
+  today_message text,
+  streak_days integer not null default 0 check (streak_days >= 0),
+  favorite_seat text,
+  live_url_youtube text,
+  live_url_tiktok text,
+  live_url_twitch text,
+  is_live boolean not null default false,
   created_at timestamptz not null default now(),
   unique (platform, platform_user_id)
 );
+
+alter table public.users add column if not exists level integer not null default 1 check (level >= 1);
+alter table public.users add column if not exists xp integer not null default 0 check (xp >= 0);
+alter table public.users add column if not exists coin integer not null default 0 check (coin >= 0);
+alter table public.users add column if not exists total_focus_time integer not null default 0 check (total_focus_time >= 0);
+alter table public.users add column if not exists current_title text;
+alter table public.users add column if not exists favorite_badges text[] not null default '{}';
+alter table public.users add column if not exists focus_tree_stage text not null default 'Seed';
+alter table public.users add column if not exists focus_tree_updated_at timestamptz;
+alter table public.users add column if not exists today_goal text;
+alter table public.users add column if not exists today_message text;
+alter table public.users add column if not exists streak_days integer not null default 0 check (streak_days >= 0);
+alter table public.users add column if not exists favorite_seat text;
+alter table public.users add column if not exists live_url_youtube text;
+alter table public.users add column if not exists live_url_tiktok text;
+alter table public.users add column if not exists live_url_twitch text;
+alter table public.users add column if not exists is_live boolean not null default false;
 
 create table if not exists public.rooms (
   id text primary key,
@@ -52,6 +85,11 @@ create table if not exists public.session_logs (
   started_at timestamptz not null,
   ended_at timestamptz not null,
   duration_seconds integer not null check (duration_seconds >= 0),
+  leave_reason text,
+  goal text,
+  xp_earned integer not null default 0,
+  coin_earned integer not null default 0,
+  result_summary jsonb,
   created_at timestamptz not null default now()
 );
 
@@ -92,6 +130,58 @@ create table if not exists public.admin_actions (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.focus_trees (
+  user_id uuid primary key references public.users(id) on delete cascade,
+  stage text not null default 'Seed',
+  total_focus_time integer not null default 0 check (total_focus_time >= 0),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.focus_calendar (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references public.users(id) on delete cascade,
+  date date not null,
+  focus_minutes integer not null default 0 check (focus_minutes >= 0),
+  unique (user_id, date)
+);
+
+create table if not exists public.rankings (
+  id uuid primary key default gen_random_uuid(),
+  period text not null,
+  room_id text references public.rooms(id) on delete set null,
+  user_id uuid references public.users(id) on delete cascade,
+  focus_minutes integer not null default 0,
+  rank integer not null default 0
+);
+
+create table if not exists public.friends (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references public.users(id) on delete cascade,
+  friend_user_id uuid references public.users(id) on delete cascade,
+  status text not null default 'pending',
+  created_at timestamptz not null default now(),
+  unique (user_id, friend_user_id)
+);
+
+create table if not exists public.reactions (
+  id uuid primary key default gen_random_uuid(),
+  from_user_id uuid references public.users(id) on delete set null,
+  to_user_id uuid references public.users(id) on delete set null,
+  room_id text references public.rooms(id) on delete set null,
+  seat_id text,
+  type text not null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.certificates (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references public.users(id) on delete cascade,
+  month text not null,
+  image_url text,
+  summary jsonb,
+  created_at timestamptz not null default now()
+);
+
 alter table public.users enable row level security;
 alter table public.rooms enable row level security;
 alter table public.seats enable row level security;
@@ -101,6 +191,12 @@ alter table public.warnings enable row level security;
 alter table public.bans enable row level security;
 alter table public.announcements enable row level security;
 alter table public.admin_actions enable row level security;
+alter table public.focus_trees enable row level security;
+alter table public.focus_calendar enable row level security;
+alter table public.rankings enable row level security;
+alter table public.friends enable row level security;
+alter table public.reactions enable row level security;
+alter table public.certificates enable row level security;
 
 drop policy if exists "Allow public display read for rooms" on public.rooms;
 create policy "Allow public display read for rooms"
@@ -166,6 +262,8 @@ create index if not exists active_sessions_room_id_idx on public.active_sessions
 create index if not exists active_sessions_seat_idx on public.active_sessions(room_id, seat_id);
 create index if not exists session_logs_user_idx on public.session_logs(user_id);
 create index if not exists admin_actions_created_at_idx on public.admin_actions(created_at);
+create index if not exists users_level_idx on public.users(level);
+create index if not exists users_xp_idx on public.users(xp);
 
 do $$
 begin

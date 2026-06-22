@@ -4,6 +4,27 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
+import { getEquippedTitle, getFavoriteBadges } from "@/lib/badges-client";
+import type { Badge, Title } from "@/lib/badges-client";
+import {
+  awardFocusSession,
+  getFocusTreeSummary,
+  getLevelProgress,
+  playLevelUpSound,
+  type FocusResult
+} from "@/lib/level-client";
+import {
+  LEAVE_REASONS,
+  REACTIONS,
+  addFocusCalendarMinutes,
+  addReaction,
+  createShareCardText,
+  getEngagementProfile,
+  getGoalLabel,
+  markFocusToday,
+  saveFavoriteSeat
+} from "@/lib/engagement-client";
+import type { EngagementProfile, LeaveReason, ReactionLog } from "@/lib/engagement-client";
 import { getRoomConfig } from "@/lib/room-config";
 import { getRoomSeatLayout } from "@/lib/roomSeatLayouts";
 import type { RoomSeatLayout } from "@/lib/roomSeatLayouts";
@@ -18,10 +39,22 @@ export default function RoomPage() {
   const [mySeatId, setMySeatId] = useState<string | null>(null);
   const [myStartedAt, setMyStartedAt] = useState<string | null>(null);
   const [savedSeatLayout, setSavedSeatLayout] = useState<RoomSeatLayout[] | null>(null);
+  const [profileTitle, setProfileTitle] = useState<Title | null>(null);
+  const [favoriteBadges, setFavoriteBadges] = useState<Badge[]>([]);
+  const [levelProgress, setLevelProgress] = useState(getLevelProgress());
+  const [result, setResult] = useState<FocusResult | null>(null);
+  const [leaveReason, setLeaveReason] = useState<LeaveReason>("終了");
+  const [engagementProfile, setEngagementProfile] =
+    useState<EngagementProfile>(getEngagementProfile());
+  const [reactionLogs, setReactionLogs] = useState<ReactionLog[]>([]);
   const [, setTick] = useState(0);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setTick((value) => value + 1), 1000);
+    setProfileTitle(getEquippedTitle());
+    setFavoriteBadges(getFavoriteBadges());
+    setLevelProgress(getLevelProgress());
+    setEngagementProfile(getEngagementProfile());
     return () => window.clearInterval(intervalId);
   }, []);
 
@@ -70,8 +103,57 @@ export default function RoomPage() {
   }
 
   function leaveSeat() {
+    if (myStartedAt) {
+      const seconds = Math.max(
+        60,
+        Math.floor((Date.now() - new Date(myStartedAt).getTime()) / 1000)
+      );
+      const focusResult = awardFocusSession(seconds);
+      addFocusCalendarMinutes(Math.round(seconds / 60));
+      const nextProfile = markFocusToday();
+      setEngagementProfile(nextProfile);
+      setResult(focusResult);
+      setLevelProgress(getLevelProgress());
+      if (focusResult.levelUp) {
+        playLevelUpSound();
+      }
+    }
     setMySeatId(null);
     setMyStartedAt(null);
+  }
+
+  function registerFavoriteSeat() {
+    if (!room) return;
+    saveFavoriteSeat({
+      roomId: room.roomId,
+      seatId: selectedSeat.id,
+      seatName: selectedPosition.seat_name,
+      savedAt: new Date().toISOString()
+    });
+    setEngagementProfile(getEngagementProfile());
+  }
+
+  function quickEnterFavoriteSeat() {
+    if (!room) return;
+    const favorite = engagementProfile.favoriteSeat;
+    if (!favorite || favorite.roomId !== room.roomId) return;
+    const favoriteSeat = room.seats.find((seat) => seat.id === favorite.seatId);
+    if (favoriteSeat?.status === "available") {
+      setSelectedSeatId(favorite.seatId);
+      setMySeatId(favorite.seatId);
+      setMyStartedAt(new Date().toISOString());
+    } else {
+      const alternative = room.seats.find((seat) => seat.status === "available");
+      if (alternative) {
+        setSelectedSeatId(alternative.id);
+      }
+    }
+  }
+
+  function sendReaction(type: (typeof REACTIONS)[number]) {
+    if (!room) return;
+    const log = addReaction(type, room.roomId, selectedSeat.id, selectedSeat.user?.displayName);
+    setReactionLogs((logs) => [log, ...logs].slice(0, 4));
   }
 
   return (
@@ -108,9 +190,9 @@ export default function RoomPage() {
         </header>
 
         <section className="room-stage grid min-h-0 gap-5 xl:grid-cols-[1fr_420px]">
-          <div className="room-map glass-panel relative min-h-[620px] overflow-hidden rounded-[2.5rem]">
+          <div className="room-map glass-panel relative overflow-hidden rounded-[2.5rem]">
             <div
-              className={`room-map-image absolute inset-0 bg-cover bg-center ${roomFallbackClass(room.roomId)}`}
+              className={`room-map-image absolute inset-0 ${roomFallbackClass(room.roomId)}`}
               style={{
                 backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.18)), url(${config.seatMapImage})`
               }}
@@ -119,7 +201,6 @@ export default function RoomPage() {
             <div
               className={`absolute inset-x-10 top-0 h-1.5 rounded-b-full ${config.accent.line}`}
             />
-            <div className="rain-layer pointer-events-none absolute inset-0 opacity-10" />
 
             <div className="room-map-copy absolute left-6 top-6 max-w-lg rounded-[2rem] border border-white/12 bg-black/30 p-5 shadow-2xl backdrop-blur-2xl">
               <p className="text-xs font-black uppercase tracking-normal text-amber-100/65">
@@ -141,6 +222,10 @@ export default function RoomPage() {
                   myStartedAt={myStartedAt}
                   onClick={() => setSelectedSeatId(seat.id)}
                   position={position}
+                  profileBadges={favoriteBadges}
+                  profileTitle={profileTitle}
+                  engagementProfile={engagementProfile}
+                  userLevel={levelProgress.level}
                   seat={seat}
                   selected={selectedSeatId === seat.id}
                 />
@@ -175,15 +260,55 @@ export default function RoomPage() {
 
           <aside className="room-side grid min-h-0 gap-5 xl:grid-rows-[auto_1fr]">
             <SeatDetail
+              engagementProfile={engagementProfile}
+              leaveReason={leaveReason}
               mySeatId={mySeatId}
               myStartedAt={myStartedAt}
               onEnter={enterSeat}
+              onFavorite={registerFavoriteSeat}
               onLeave={leaveSeat}
+              onQuickFavorite={quickEnterFavoriteSeat}
+              onReasonChange={setLeaveReason}
+              onSaveProfile={setEngagementProfile}
+              roomId={room.roomId}
               seat={selectedSeat}
               visualLabel={selectedPosition.seat_name}
             />
 
             <div className="grid min-h-0 gap-5 lg:grid-cols-2 xl:grid-cols-1">
+              <Panel title="近くの席">
+                <div className="grid gap-3">
+                  <div className="flex flex-wrap gap-2">
+                    {REACTIONS.map((reaction) => (
+                      <button
+                        className="rounded-full border border-white/10 bg-black/24 px-3 py-2 text-xs font-black"
+                        key={reaction}
+                        onClick={() => sendReaction(reaction)}
+                        type="button"
+                      >
+                        {reaction}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid gap-2">
+                    {reactionLogs.length === 0 ? (
+                      <p className="rounded-2xl border border-white/10 bg-black/24 p-3 text-sm font-bold text-stone-200/55">
+                        隣の席へ軽いリアクションを送れます。
+                      </p>
+                    ) : (
+                      reactionLogs.map((log) => (
+                        <p
+                          className="rounded-2xl border border-amber-100/20 bg-amber-100/10 p-3 text-sm font-black text-amber-100"
+                          key={log.id}
+                        >
+                          {log.type} → {log.toUser}
+                        </p>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </Panel>
+
               <Panel title="参加者">
                 <div className="grid max-h-[270px] gap-3 overflow-auto pr-1">
                   {room.participants.map((participant) => (
@@ -195,6 +320,9 @@ export default function RoomPage() {
                         {participant.seatId}
                       </span>
                       <div className="min-w-0">
+                        <p className="text-[0.65rem] font-black uppercase text-amber-100/70">
+                          Lv.{Math.max(1, 12 + participant.displayName.length)}
+                        </p>
                         <strong className="block truncate text-lg font-black">
                           {participant.displayName}
                         </strong>
@@ -234,6 +362,19 @@ export default function RoomPage() {
           </aside>
         </section>
       </section>
+      {result ? (
+        <FocusResultModal
+          onClose={() => setResult(null)}
+          leaveReason={leaveReason}
+          onLobbyHref="/lobby"
+          onSitAgain={() => {
+            setResult(null);
+            enterSeat();
+          }}
+          result={result}
+          roomName={room.name}
+        />
+      ) : null}
     </main>
   );
 }
@@ -244,6 +385,10 @@ function SeatPin({
   selected,
   mine,
   myStartedAt,
+  profileTitle,
+  profileBadges,
+  engagementProfile,
+  userLevel,
   onClick
 }: {
   seat: Seat;
@@ -251,6 +396,10 @@ function SeatPin({
   selected: boolean;
   mine: boolean;
   myStartedAt: string | null;
+  profileTitle: Title | null;
+  profileBadges: Badge[];
+  engagementProfile: EngagementProfile;
+  userLevel: number;
   onClick: () => void;
 }) {
   const activeUser = mine
@@ -262,12 +411,18 @@ function SeatPin({
           : 0
       }
     : seat.user;
+  const statusClass = mine
+    ? "seat-hotspot-mine"
+    : activeUser
+      ? "seat-hotspot-occupied"
+      : `seat-hotspot-${seat.status}`;
 
   return (
     <button
-      className={`seat-hotspot absolute z-20 -translate-x-1/2 -translate-y-1/2 rounded-[1.25rem] transition duration-300 hover:bg-amber-100/10 ${
+      aria-label={`${position.seat_name} ${getSeatStatusLabel(mine ? "mine" : seat.status)}`}
+      className={`seat-hotspot absolute z-20 -translate-x-1/2 -translate-y-1/2 rounded-[1.25rem] transition duration-300 ${
         selected ? "seat-hotspot-selected" : ""
-      } ${activeUser ? "seat-hotspot-active" : ""}`}
+      } ${statusClass}`}
       onClick={onClick}
       style={{
         left: `${position.x}%`,
@@ -280,18 +435,215 @@ function SeatPin({
     >
       {activeUser ? (
         <span className="seat-avatar pointer-events-none absolute left-1/2 top-1/2 grid -translate-x-1/2 -translate-y-1/2 gap-1 rounded-2xl border border-amber-100/35 bg-black/58 px-3 py-2 text-center shadow-[0_0_40px_rgba(253,230,138,0.25)] backdrop-blur-2xl">
-          <span className="mx-auto grid h-9 w-9 place-items-center rounded-full bg-amber-100 text-sm font-black text-stone-950">
+          <span className="text-[0.6rem] font-black uppercase tracking-normal text-amber-100/75">
+            {mine ? (profileTitle?.name ?? "Cafe Master") : "Focus Mate"}
+          </span>
+          {mine ? (
+            <span className="text-[0.6rem] font-black tracking-normal text-emerald-100/80">
+              🔥 {engagementProfile.streakDays}日 / {getGoalLabel(engagementProfile)}
+            </span>
+          ) : null}
+          <span className="text-[0.6rem] font-black uppercase tracking-normal text-stone-100/70">
+            Lv.{mine ? userLevel : 18}
+          </span>
+          <span className="relative mx-auto grid h-9 w-9 place-items-center rounded-full bg-amber-100 text-sm font-black text-stone-950">
             {activeUser.displayName.slice(0, 1)}
+            {profileBadges[0] ? (
+              <span className="absolute -right-2 -top-2 grid h-5 w-5 place-items-center rounded-full border border-black/40 bg-black text-[0.5rem] font-black text-amber-100">
+                {profileBadges[0].icon.slice(0, 2)}
+              </span>
+            ) : null}
           </span>
           <span className="max-w-24 truncate text-xs font-black text-stone-50">
             {activeUser.displayName}
           </span>
+          {mine && engagementProfile.live.isLive ? (
+            <a
+              className="pointer-events-auto rounded-full bg-rose-500 px-2 py-0.5 text-[0.58rem] font-black text-white"
+              href={engagementProfile.live.youtubeUrl}
+              rel="noreferrer"
+              target="_blank"
+            >
+              ● LIVE
+            </a>
+          ) : null}
           <span className="font-mono text-[0.65rem] font-black text-amber-100">
             {formatDuration(activeUser.elapsedSeconds)}
           </span>
         </span>
-      ) : null}
+      ) : (
+        <span className="seat-marker-dot pointer-events-none" aria-hidden="true" />
+      )}
     </button>
+  );
+}
+
+function FocusResultModal({
+  result,
+  roomName,
+  leaveReason,
+  onClose,
+  onSitAgain,
+  onLobbyHref
+}: {
+  result: FocusResult;
+  roomName: string;
+  leaveReason: LeaveReason;
+  onClose: () => void;
+  onSitAgain: () => void;
+  onLobbyHref: string;
+}) {
+  const tree = getFocusTreeSummary();
+  const level = getLevelProgress();
+  const shareText = createShareCardText({
+    roomName,
+    focusSeconds: result.focusSeconds,
+    xp: result.xp,
+    coin: result.coin,
+    level: level.level
+  });
+
+  function saveShareCard() {
+    const blob = new Blob([shareText], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "kiitos-share-card.txt";
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/68 p-6 backdrop-blur-xl">
+      <section className="glass-panel relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] p-8 text-center">
+        {result.levelUp ? (
+          <>
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              {Array.from({ length: 18 }).map((_, index) => (
+                <span
+                  className="absolute h-2 w-2 animate-level-confetti rounded-full bg-amber-100/85"
+                  key={index}
+                  style={{
+                    left: `${8 + ((index * 17) % 84)}%`,
+                    animationDelay: `${index * 0.045}s`,
+                    animationDuration: `${1.5 + (index % 5) * 0.12}s`
+                  }}
+                />
+              ))}
+            </div>
+            <div className="absolute inset-x-0 top-0 bg-amber-100/18 px-6 py-4 text-amber-50 shadow-[0_0_80px_rgba(253,230,138,0.28)]">
+              <p className="text-sm font-black uppercase tracking-normal">LEVEL UP!</p>
+              <p className="mt-1 text-2xl font-black">
+                Lv.{result.previousLevel} → Lv.{result.nextLevel}
+              </p>
+            </div>
+          </>
+        ) : null}
+        <div className={result.levelUp ? "pt-20" : ""}>
+          <p className="text-sm font-black uppercase text-amber-100/70">Good Job!</p>
+          <h2 className="mt-3 text-5xl font-black">今日は {formatDuration(result.focusSeconds)}</h2>
+          <p className="mt-3 text-lg font-bold text-stone-200/70">集中しました！</p>
+          <p className="mt-2 text-sm font-black text-amber-100">退出理由: {leaveReason}</p>
+
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            <ResultMetric label="獲得XP" value={`+${result.xp} XP`} />
+            <ResultMetric label="Coin" value={`+${result.coin}`} />
+            <ResultMetric
+              label="昨日より"
+              value={`+${Math.round(result.yesterdayDiffSeconds / 60)}分`}
+            />
+          </div>
+
+          <div className="mt-5 rounded-[1.75rem] border border-emerald-100/20 bg-emerald-100/10 p-5">
+            <p className="text-xs font-black uppercase text-emerald-100/70">Focus Tree</p>
+            <p className="mt-2 text-5xl">{tree.stage.icon}</p>
+            <p className="mt-2 text-2xl font-black">
+              累計集中時間 {tree.totalHours}時間 / {tree.stage.name}
+            </p>
+            <p className="mt-2 text-sm font-bold text-stone-200/65">
+              {tree.next
+                ? `次の成長まで あと${tree.hoursToNext}時間`
+                : "伝説の木まで成長しています。"}
+            </p>
+          </div>
+
+          <p className="mt-5 text-sm font-bold text-stone-200/60">
+            獲得バッジ:{" "}
+            {result.unlockedBadges.length ? result.unlockedBadges.join(", ") : "今回は新規なし"}
+          </p>
+
+          <div className="mt-5 rounded-[1.75rem] border border-amber-100/20 bg-black/32 p-5 text-left">
+            <p className="text-xs font-black uppercase text-amber-100/70">SNS Share Card</p>
+            <pre className="mt-3 whitespace-pre-wrap text-sm font-bold leading-6 text-stone-100/72">
+              {shareText}
+            </pre>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                className="rounded-full bg-amber-100 px-4 py-2 text-sm font-black text-stone-950"
+                onClick={saveShareCard}
+                type="button"
+              >
+                画像として保存
+              </button>
+              <a
+                className="rounded-full border border-white/10 bg-white/8 px-4 py-2 text-sm font-black"
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`}
+                rel="noreferrer"
+                target="_blank"
+              >
+                Xでシェア
+              </a>
+              <button
+                className="rounded-full border border-white/10 bg-white/8 px-4 py-2 text-sm font-black"
+                onClick={saveShareCard}
+                type="button"
+              >
+                Instagram投稿用に保存
+              </button>
+              <button
+                className="rounded-full border border-white/10 bg-white/8 px-4 py-2 text-sm font-black"
+                onClick={saveShareCard}
+                type="button"
+              >
+                TikTok投稿用に保存
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-7 grid gap-3 sm:grid-cols-3">
+            <button
+              className="rounded-2xl bg-amber-100 px-5 py-4 font-black text-stone-950"
+              onClick={onSitAgain}
+              type="button"
+            >
+              もう一度座る
+            </button>
+            <Link
+              className="rounded-2xl border border-white/12 bg-white/8 px-5 py-4 font-black"
+              href={onLobbyHref}
+            >
+              ロビーへ戻る
+            </Link>
+            <button
+              className="rounded-2xl border border-white/12 bg-black/28 px-5 py-4 font-black"
+              onClick={onClose}
+              type="button"
+            >
+              終了
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function ResultMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/24 p-4">
+      <p className="text-xs font-black uppercase text-stone-300/48">{label}</p>
+      <p className="mt-2 text-2xl font-black text-amber-100">{value}</p>
+    </div>
   );
 }
 
@@ -309,17 +661,31 @@ function getSeatForLayout(seats: Seat[], layout: RoomSeatLayout): Seat {
 function SeatDetail({
   seat,
   visualLabel,
+  engagementProfile,
+  leaveReason,
   mySeatId,
   myStartedAt,
   onEnter,
-  onLeave
+  onLeave,
+  onFavorite,
+  onQuickFavorite,
+  onReasonChange,
+  onSaveProfile,
+  roomId
 }: {
   seat: Seat;
   visualLabel: string;
+  engagementProfile: EngagementProfile;
+  leaveReason: LeaveReason;
   mySeatId: string | null;
   myStartedAt: string | null;
   onEnter: () => void;
   onLeave: () => void;
+  onFavorite: () => void;
+  onQuickFavorite: () => void;
+  onReasonChange: (reason: LeaveReason) => void;
+  onSaveProfile: (profile: EngagementProfile) => void;
+  roomId: string;
 }) {
   const isMine = mySeatId === seat.id;
   const canEnter = seat.status === "available" || isMine;
@@ -350,6 +716,12 @@ function SeatDetail({
       <div className="mt-6 grid gap-3 rounded-[1.75rem] border border-white/10 bg-black/24 p-4">
         <DetailLine label="利用者" value={isMine ? "You" : (seat.user?.displayName ?? "空席")} />
         <DetailLine
+          label="今日の目標"
+          value={isMine ? getGoalLabel(engagementProfile) : "集中作業"}
+        />
+        <DetailLine label="今日の一言" value={engagementProfile.todayMessage || "未設定"} />
+        <DetailLine label="ストリーク" value={`🔥 ${engagementProfile.streakDays}日連続`} />
+        <DetailLine
           label="作業開始"
           value={
             isMine && myStartedAt
@@ -363,6 +735,32 @@ function SeatDetail({
           label="経過時間"
           value={elapsedSeconds !== undefined ? formatDuration(elapsedSeconds) : "--:--:--"}
         />
+      </div>
+
+      <div className="mt-5 grid gap-3 rounded-[1.75rem] border border-white/10 bg-black/24 p-4">
+        <label className="grid gap-2 text-xs font-black uppercase text-stone-300/50">
+          退出理由
+          <select
+            className="rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm font-black text-stone-50 outline-none"
+            onChange={(event) => onReasonChange(event.target.value as LeaveReason)}
+            value={leaveReason}
+          >
+            {LEAVE_REASONS.map((reason) => (
+              <option key={reason} value={reason}>
+                {reason}
+              </option>
+            ))}
+          </select>
+        </label>
+        {engagementProfile.favoriteSeat?.roomId === roomId ? (
+          <button
+            className="rounded-2xl border border-emerald-100/20 bg-emerald-100/10 px-4 py-3 text-sm font-black text-emerald-100"
+            onClick={onQuickFavorite}
+            type="button"
+          >
+            お気に入り席へ座る
+          </button>
+        ) : null}
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
@@ -383,6 +781,24 @@ function SeatDetail({
           退出
         </button>
       </div>
+      <button
+        className="mt-3 w-full rounded-2xl border border-white/12 bg-white/8 px-4 py-4 font-black"
+        onClick={() => {
+          onFavorite();
+          onSaveProfile(getEngagementProfile());
+        }}
+        type="button"
+      >
+        この席をお気に入り登録
+      </button>
+      {isMine ? (
+        <Link
+          className="mt-3 block rounded-2xl border border-amber-100/30 bg-amber-100/12 px-4 py-4 text-center font-black text-amber-100 transition hover:bg-amber-100/18"
+          href={`/rooms/${roomId}/seat/${seat.id}`}
+        >
+          席ビューへ入る
+        </Link>
+      ) : null}
     </section>
   );
 }
@@ -445,7 +861,6 @@ function RoomImageBackground({ roomId, image }: { roomId: string; image: string 
       />
       <div className="wood-grain pointer-events-none fixed inset-x-0 bottom-0 h-[25vh] opacity-45" />
       <div className="lamp-glow pointer-events-none fixed right-[8%] top-[-14%] h-[34rem] w-[34rem] rounded-full opacity-60" />
-      <div className="rain-layer pointer-events-none fixed inset-0 opacity-[0.12]" />
     </>
   );
 }
@@ -482,7 +897,11 @@ function getSeatDot(status: SeatStatus | "mine") {
   return "bg-emerald-200";
 }
 
-function getSeatStatusLabel(status: SeatStatus) {
+function getSeatStatusLabel(status: SeatStatus | "mine") {
+  if (status === "mine") {
+    return "自分の席";
+  }
+
   if (status === "occupied") {
     return "使用中";
   }

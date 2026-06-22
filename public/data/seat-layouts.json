@@ -2,715 +2,835 @@
   "cafe": [
     {
       "seat_id": "A1",
-      "x": 21,
-      "y": 31,
+      "seat_name": "窓側テーブル",
+      "x": 21.4,
+      "y": 23.3,
       "width": 6,
-      "height": 9,
-      "seat_name": "窓側テーブル"
+      "height": 9
     },
     {
       "seat_id": "A2",
-      "x": 23,
-      "y": 53,
+      "seat_name": "窓側テーブル",
+      "x": 28,
+      "y": 32.9,
       "width": 6,
-      "height": 9,
-      "seat_name": "窓側テーブル"
+      "height": 9
     },
     {
       "seat_id": "A3",
-      "x": 22,
-      "y": 72,
+      "seat_name": "窓側テーブル",
+      "x": 21.2,
+      "y": 43.7,
       "width": 6,
-      "height": 9,
-      "seat_name": "窓側テーブル"
+      "height": 9
     },
     {
       "seat_id": "B1",
+      "seat_name": "中央テーブル",
       "x": 38,
       "y": 45,
       "width": 6,
-      "height": 8,
-      "seat_name": "中央テーブル"
+      "height": 8
     },
     {
       "seat_id": "B2",
-      "x": 46,
-      "y": 38,
+      "seat_name": "中央テーブル",
+      "x": 43,
+      "y": 36.7,
       "width": 6,
-      "height": 8,
-      "seat_name": "中央テーブル"
+      "height": 8
     },
     {
       "seat_id": "B3",
-      "x": 52,
-      "y": 39,
+      "seat_name": "中央テーブル",
+      "x": 50.2,
+      "y": 36.6,
       "width": 6,
-      "height": 8,
-      "seat_name": "中央テーブル"
+      "height": 8
     },
     {
       "seat_id": "B4",
-      "x": 59,
-      "y": 39,
+      "seat_name": "中央テーブル",
+      "x": 57.9,
+      "y": 36.3,
       "width": 6,
-      "height": 8,
-      "seat_name": "中央テーブル"
+      "height": 8
     },
     {
       "seat_id": "B5",
-      "x": 65,
-      "y": 45,
+      "seat_name": "中央テーブル",
+      "x": 65.4,
+      "y": 46.1,
       "width": 6,
-      "height": 8,
-      "seat_name": "中央テーブル"
+      "height": 8
     },
     {
       "seat_id": "C1",
+      "seat_name": "カウンター席",
       "x": 30,
       "y": 86,
       "width": 6,
-      "height": 8,
-      "seat_name": "カウンター席"
+      "height": 8
     },
     {
       "seat_id": "C2",
+      "seat_name": "カウンター席",
       "x": 41,
       "y": 86,
       "width": 6,
-      "height": 8,
-      "seat_name": "カウンター席"
+      "height": 8
     },
     {
       "seat_id": "C3",
+      "seat_name": "カウンター席",
       "x": 50,
       "y": 86,
       "width": 6,
-      "height": 8,
-      "seat_name": "カウンター席"
+      "height": 8
     },
     {
       "seat_id": "C4",
+      "seat_name": "カウンター席",
       "x": 60,
       "y": 86,
       "width": 6,
-      "height": 8,
-      "seat_name": "カウンター席"
+      "height": 8
     },
     {
       "seat_id": "C5",
+      "seat_name": "カウンター席",
       "x": 70,
       "y": 86,
       "width": 6,
-      "height": 8,
-      "seat_name": "カウンター席"
+      "height": 8
     },
     {
       "seat_id": "D1",
-      "x": 81,
-      "y": 35,
+      "seat_name": "ソファ横テーブル",
+      "x": 79.5,
+      "y": 32.4,
       "width": 6,
-      "height": 9,
-      "seat_name": "ソファ横テーブル"
+      "height": 9
     },
     {
       "seat_id": "D2",
-      "x": 82,
-      "y": 56,
+      "seat_name": "ソファ横テーブル",
+      "x": 90.7,
+      "y": 38.3,
       "width": 6,
-      "height": 9,
-      "seat_name": "ソファ横テーブル"
+      "height": 9
+    },
+    {
+      "seat_id": "A4",
+      "seat_name": "新しい椅子 16",
+      "x": 28,
+      "y": 52.2,
+      "width": 6,
+      "height": 9
+    },
+    {
+      "seat_id": "A5",
+      "seat_name": "新しい椅子 17",
+      "x": 20.4,
+      "y": 64.1,
+      "width": 6,
+      "height": 9
+    },
+    {
+      "seat_id": "A6",
+      "seat_name": "新しい椅子 18",
+      "x": 26.8,
+      "y": 73.8,
+      "width": 6,
+      "height": 9
+    },
+    {
+      "seat_id": "B6",
+      "seat_name": "新しい椅子 19",
+      "x": 57.3,
+      "y": 57.6,
+      "width": 6,
+      "height": 8
+    },
+    {
+      "seat_id": "B7",
+      "seat_name": "新しい椅子 20",
+      "x": 50.3,
+      "y": 57.6,
+      "width": 6,
+      "height": 9
+    },
+    {
+      "seat_id": "B8",
+      "seat_name": "新しい椅子 21",
+      "x": 42.9,
+      "y": 56.9,
+      "width": 6,
+      "height": 8
+    },
+    {
+      "seat_id": "E3",
+      "seat_name": "新しい椅子 22",
+      "x": 45,
+      "y": 19,
+      "width": 5,
+      "height": 6
+    },
+    {
+      "seat_id": "E2",
+      "seat_name": "新しい椅子 23",
+      "x": 38.3,
+      "y": 18.9,
+      "width": 5,
+      "height": 6
+    },
+    {
+      "seat_id": "E1",
+      "seat_name": "新しい椅子 24",
+      "x": 31,
+      "y": 19,
+      "width": 5,
+      "height": 6
+    },
+    {
+      "seat_id": "D3",
+      "seat_name": "新しい椅子 25",
+      "x": 92.5,
+      "y": 51.6,
+      "width": 6,
+      "height": 8
+    },
+    {
+      "seat_id": "D6",
+      "seat_name": "新しい椅子 26",
+      "x": 82,
+      "y": 51.4,
+      "width": 4,
+      "height": 8
+    },
+    {
+      "seat_id": "D5",
+      "seat_name": "新しい椅子 27",
+      "x": 92.4,
+      "y": 72,
+      "width": 6,
+      "height": 8
+    },
+    {
+      "seat_id": "D6",
+      "seat_name": "新しい椅子 28",
+      "x": 82,
+      "y": 51.4,
+      "width": 5,
+      "height": 6
+    },
+    {
+      "seat_id": "E5",
+      "seat_name": "新しい椅子 29",
+      "x": 62,
+      "y": 17.7,
+      "width": 5,
+      "height": 6
+    },
+    {
+      "seat_id": "E4",
+      "seat_name": "新しい椅子 30",
+      "x": 51.8,
+      "y": 19.1,
+      "width": 5,
+      "height": 6
     }
   ],
   "library": [
     {
       "seat_id": "A1",
+      "seat_name": "窓側静音席",
       "x": 10,
       "y": 23,
       "width": 5,
-      "height": 8,
-      "seat_name": "窓側静音席"
+      "height": 8
     },
     {
       "seat_id": "A2",
+      "seat_name": "窓側静音席",
       "x": 10,
       "y": 33,
       "width": 5,
-      "height": 8,
-      "seat_name": "窓側静音席"
+      "height": 8
     },
     {
       "seat_id": "A3",
+      "seat_name": "窓側静音席",
       "x": 10,
       "y": 46,
       "width": 5,
-      "height": 8,
-      "seat_name": "窓側静音席"
+      "height": 8
     },
     {
       "seat_id": "A4",
+      "seat_name": "窓側静音席",
       "x": 10,
       "y": 58,
       "width": 5,
-      "height": 8,
-      "seat_name": "窓側静音席"
+      "height": 8
     },
     {
       "seat_id": "B1",
+      "seat_name": "上段読書机",
       "x": 34,
       "y": 18,
       "width": 6,
-      "height": 8,
-      "seat_name": "上段読書机"
+      "height": 8
     },
     {
       "seat_id": "B2",
+      "seat_name": "上段読書机",
       "x": 41,
       "y": 18,
       "width": 6,
-      "height": 8,
-      "seat_name": "上段読書机"
+      "height": 8
     },
     {
       "seat_id": "B3",
+      "seat_name": "上段読書机",
       "x": 49,
       "y": 18,
       "width": 6,
-      "height": 8,
-      "seat_name": "上段読書机"
+      "height": 8
     },
     {
       "seat_id": "B4",
+      "seat_name": "上段読書机",
       "x": 56,
       "y": 18,
       "width": 6,
-      "height": 8,
-      "seat_name": "上段読書机"
+      "height": 8
     },
     {
       "seat_id": "B5",
+      "seat_name": "上段読書机",
       "x": 63,
       "y": 18,
       "width": 6,
-      "height": 8,
-      "seat_name": "上段読書机"
+      "height": 8
     },
     {
       "seat_id": "C1",
+      "seat_name": "中央集中席",
       "x": 38,
       "y": 45,
       "width": 6,
-      "height": 8,
-      "seat_name": "中央集中席"
+      "height": 8
     },
     {
       "seat_id": "C2",
+      "seat_name": "中央集中席",
       "x": 46,
       "y": 45,
       "width": 6,
-      "height": 8,
-      "seat_name": "中央集中席"
+      "height": 8
     },
     {
       "seat_id": "C3",
+      "seat_name": "中央集中席",
       "x": 54,
       "y": 45,
       "width": 6,
-      "height": 8,
-      "seat_name": "中央集中席"
+      "height": 8
     },
     {
       "seat_id": "C4",
+      "seat_name": "中央集中席",
       "x": 62,
       "y": 45,
       "width": 6,
-      "height": 8,
-      "seat_name": "中央集中席"
+      "height": 8
     },
     {
       "seat_id": "D1",
+      "seat_name": "下段読書机",
       "x": 39,
       "y": 72,
       "width": 6,
-      "height": 8,
-      "seat_name": "下段読書机"
+      "height": 8
     },
     {
       "seat_id": "D2",
+      "seat_name": "下段読書机",
       "x": 47,
       "y": 72,
       "width": 6,
-      "height": 8,
-      "seat_name": "下段読書机"
+      "height": 8
     },
     {
       "seat_id": "D3",
+      "seat_name": "下段読書机",
       "x": 55,
       "y": 72,
       "width": 6,
-      "height": 8,
-      "seat_name": "下段読書机"
+      "height": 8
     },
     {
       "seat_id": "D4",
+      "seat_name": "下段読書机",
       "x": 63,
       "y": 72,
       "width": 6,
-      "height": 8,
-      "seat_name": "下段読書机"
+      "height": 8
     },
     {
       "seat_id": "E1",
+      "seat_name": "本棚横個室席",
       "x": 85,
       "y": 49,
       "width": 6,
-      "height": 8,
-      "seat_name": "本棚横個室席"
+      "height": 8
     }
   ],
   "office": [
     {
       "seat_id": "A1",
+      "seat_name": "窓側デスク",
       "x": 15,
       "y": 39,
       "width": 7,
-      "height": 9,
-      "seat_name": "窓側デスク"
+      "height": 9
     },
     {
       "seat_id": "A2",
+      "seat_name": "窓側デスク",
       "x": 15,
       "y": 54,
       "width": 7,
-      "height": 9,
-      "seat_name": "窓側デスク"
+      "height": 9
     },
     {
       "seat_id": "A3",
+      "seat_name": "窓側デスク",
       "x": 15,
       "y": 68,
       "width": 7,
-      "height": 9,
-      "seat_name": "窓側デスク"
+      "height": 9
     },
     {
       "seat_id": "B1",
+      "seat_name": "中央ワークデスク",
       "x": 36,
       "y": 45,
       "width": 7,
-      "height": 8,
-      "seat_name": "中央ワークデスク"
+      "height": 8
     },
     {
       "seat_id": "B2",
+      "seat_name": "中央ワークデスク",
       "x": 54,
       "y": 45,
       "width": 7,
-      "height": 8,
-      "seat_name": "中央ワークデスク"
+      "height": 8
     },
     {
       "seat_id": "B3",
+      "seat_name": "中央ワークデスク",
       "x": 35,
       "y": 64,
       "width": 7,
-      "height": 8,
-      "seat_name": "中央ワークデスク"
+      "height": 8
     },
     {
       "seat_id": "B4",
+      "seat_name": "中央ワークデスク",
       "x": 54,
       "y": 64,
       "width": 7,
-      "height": 8,
-      "seat_name": "中央ワークデスク"
+      "height": 8
     },
     {
       "seat_id": "C1",
+      "seat_name": "上段集中デスク",
       "x": 22,
       "y": 21,
       "width": 7,
-      "height": 8,
-      "seat_name": "上段集中デスク"
+      "height": 8
     },
     {
       "seat_id": "C2",
+      "seat_name": "上段集中デスク",
       "x": 32,
       "y": 21,
       "width": 7,
-      "height": 8,
-      "seat_name": "上段集中デスク"
+      "height": 8
     },
     {
       "seat_id": "C3",
+      "seat_name": "上段集中デスク",
       "x": 42,
       "y": 21,
       "width": 7,
-      "height": 8,
-      "seat_name": "上段集中デスク"
+      "height": 8
     },
     {
       "seat_id": "C4",
+      "seat_name": "上段集中デスク",
       "x": 51,
       "y": 21,
       "width": 7,
-      "height": 8,
-      "seat_name": "上段集中デスク"
+      "height": 8
     },
     {
       "seat_id": "C5",
+      "seat_name": "上段集中デスク",
       "x": 61,
       "y": 21,
       "width": 7,
-      "height": 8,
-      "seat_name": "上段集中デスク"
+      "height": 8
     },
     {
       "seat_id": "W1",
+      "seat_name": "窓際ブース",
       "x": 26,
       "y": 84,
       "width": 7,
-      "height": 8,
-      "seat_name": "窓際ブース"
+      "height": 8
     },
     {
       "seat_id": "W2",
+      "seat_name": "窓際ブース",
       "x": 36,
       "y": 84,
       "width": 7,
-      "height": 8,
-      "seat_name": "窓際ブース"
+      "height": 8
     },
     {
       "seat_id": "W3",
+      "seat_name": "窓際ブース",
       "x": 45,
       "y": 84,
       "width": 7,
-      "height": 8,
-      "seat_name": "窓際ブース"
+      "height": 8
     },
     {
       "seat_id": "W4",
+      "seat_name": "窓際ブース",
       "x": 55,
       "y": 84,
       "width": 7,
-      "height": 8,
-      "seat_name": "窓際ブース"
+      "height": 8
     },
     {
       "seat_id": "W5",
+      "seat_name": "窓際ブース",
       "x": 64,
       "y": 84,
       "width": 7,
-      "height": 8,
-      "seat_name": "窓際ブース"
+      "height": 8
     },
     {
       "seat_id": "L1",
+      "seat_name": "ラウンジ側デスク",
       "x": 84,
       "y": 24,
       "width": 7,
-      "height": 9,
-      "seat_name": "ラウンジ側デスク"
+      "height": 9
     },
     {
       "seat_id": "L2",
+      "seat_name": "ラウンジ側デスク",
       "x": 84,
       "y": 43,
       "width": 7,
-      "height": 9,
-      "seat_name": "ラウンジ側デスク"
+      "height": 9
     },
     {
       "seat_id": "L3",
+      "seat_name": "ラウンジ側デスク",
       "x": 84,
       "y": 62,
       "width": 7,
-      "height": 9,
-      "seat_name": "ラウンジ側デスク"
+      "height": 9
     }
   ],
   "creator": [
     {
       "seat_id": "A1",
+      "seat_name": "左側制作デスク",
       "x": 13,
       "y": 40,
       "width": 7,
-      "height": 9,
-      "seat_name": "左側制作デスク"
+      "height": 9
     },
     {
       "seat_id": "A2",
+      "seat_name": "左側制作デスク",
       "x": 13,
       "y": 56,
       "width": 7,
-      "height": 9,
-      "seat_name": "左側制作デスク"
+      "height": 9
     },
     {
       "seat_id": "A3",
+      "seat_name": "左側制作デスク",
       "x": 13,
       "y": 73,
       "width": 7,
-      "height": 9,
-      "seat_name": "左側制作デスク"
+      "height": 9
     },
     {
       "seat_id": "B1",
+      "seat_name": "中央編集ブース",
       "x": 39,
       "y": 47,
       "width": 8,
-      "height": 9,
-      "seat_name": "中央編集ブース"
+      "height": 9
     },
     {
       "seat_id": "B2",
+      "seat_name": "中央編集ブース",
       "x": 53,
       "y": 47,
       "width": 8,
-      "height": 9,
-      "seat_name": "中央編集ブース"
+      "height": 9
     },
     {
       "seat_id": "B3",
+      "seat_name": "中央編集ブース",
       "x": 40,
       "y": 64,
       "width": 8,
-      "height": 9,
-      "seat_name": "中央編集ブース"
+      "height": 9
     },
     {
       "seat_id": "B4",
+      "seat_name": "中央編集ブース",
       "x": 54,
       "y": 64,
       "width": 8,
-      "height": 9,
-      "seat_name": "中央編集ブース"
+      "height": 9
     },
     {
       "seat_id": "C1",
+      "seat_name": "上段モニター席",
       "x": 25,
       "y": 23,
       "width": 7,
-      "height": 8,
-      "seat_name": "上段モニター席"
+      "height": 8
     },
     {
       "seat_id": "C2",
+      "seat_name": "上段モニター席",
       "x": 35,
       "y": 23,
       "width": 7,
-      "height": 8,
-      "seat_name": "上段モニター席"
+      "height": 8
     },
     {
       "seat_id": "C3",
+      "seat_name": "上段モニター席",
       "x": 45,
       "y": 23,
       "width": 7,
-      "height": 8,
-      "seat_name": "上段モニター席"
+      "height": 8
     },
     {
       "seat_id": "C4",
+      "seat_name": "上段モニター席",
       "x": 55,
       "y": 23,
       "width": 7,
-      "height": 8,
-      "seat_name": "上段モニター席"
+      "height": 8
     },
     {
       "seat_id": "C5",
+      "seat_name": "上段モニター席",
       "x": 65,
       "y": 23,
       "width": 7,
-      "height": 8,
-      "seat_name": "上段モニター席"
+      "height": 8
     },
     {
       "seat_id": "W1",
+      "seat_name": "下段レンダー席",
       "x": 27,
       "y": 88,
       "width": 7,
-      "height": 8,
-      "seat_name": "下段レンダー席"
+      "height": 8
     },
     {
       "seat_id": "W2",
+      "seat_name": "下段レンダー席",
       "x": 37,
       "y": 88,
       "width": 7,
-      "height": 8,
-      "seat_name": "下段レンダー席"
+      "height": 8
     },
     {
       "seat_id": "W3",
+      "seat_name": "下段レンダー席",
       "x": 46,
       "y": 88,
       "width": 7,
-      "height": 8,
-      "seat_name": "下段レンダー席"
+      "height": 8
     },
     {
       "seat_id": "W4",
+      "seat_name": "下段レンダー席",
       "x": 56,
       "y": 88,
       "width": 7,
-      "height": 8,
-      "seat_name": "下段レンダー席"
+      "height": 8
     },
     {
       "seat_id": "W5",
+      "seat_name": "下段レンダー席",
       "x": 65,
       "y": 88,
       "width": 7,
-      "height": 8,
-      "seat_name": "下段レンダー席"
+      "height": 8
     },
     {
       "seat_id": "L1",
+      "seat_name": "右側配信席",
       "x": 84,
       "y": 51,
       "width": 7,
-      "height": 9,
-      "seat_name": "右側配信席"
+      "height": 9
     },
     {
       "seat_id": "L2",
+      "seat_name": "右側配信席",
       "x": 84,
       "y": 66,
       "width": 7,
-      "height": 9,
-      "seat_name": "右側配信席"
+      "height": 9
     }
   ],
   "night": [
     {
       "seat_id": "A1",
+      "seat_name": "窓側カウンター",
       "x": 12,
       "y": 18,
       "width": 5,
-      "height": 8,
-      "seat_name": "窓側カウンター"
+      "height": 8
     },
     {
       "seat_id": "A2",
+      "seat_name": "窓側カウンター",
       "x": 12,
       "y": 30,
       "width": 5,
-      "height": 8,
-      "seat_name": "窓側カウンター"
+      "height": 8
     },
     {
       "seat_id": "A3",
+      "seat_name": "窓側カウンター",
       "x": 12,
       "y": 42,
       "width": 5,
-      "height": 8,
-      "seat_name": "窓側カウンター"
+      "height": 8
     },
     {
       "seat_id": "A4",
+      "seat_name": "窓側カウンター",
       "x": 12,
       "y": 55,
       "width": 5,
-      "height": 8,
-      "seat_name": "窓側カウンター"
+      "height": 8
     },
     {
       "seat_id": "B1",
+      "seat_name": "上段個人席",
       "x": 31,
       "y": 21,
       "width": 6,
-      "height": 8,
-      "seat_name": "上段個人席"
+      "height": 8
     },
     {
       "seat_id": "B2",
+      "seat_name": "上段個人席",
       "x": 43,
       "y": 21,
       "width": 6,
-      "height": 8,
-      "seat_name": "上段個人席"
+      "height": 8
     },
     {
       "seat_id": "C1",
+      "seat_name": "中央ロングテーブル",
       "x": 33,
       "y": 48,
       "width": 6,
-      "height": 8,
-      "seat_name": "中央ロングテーブル"
+      "height": 8
     },
     {
       "seat_id": "C2",
+      "seat_name": "中央ロングテーブル",
       "x": 40,
       "y": 48,
       "width": 6,
-      "height": 8,
-      "seat_name": "中央ロングテーブル"
+      "height": 8
     },
     {
       "seat_id": "C3",
+      "seat_name": "中央ロングテーブル",
       "x": 47,
       "y": 48,
       "width": 6,
-      "height": 8,
-      "seat_name": "中央ロングテーブル"
+      "height": 8
     },
     {
       "seat_id": "C4",
+      "seat_name": "中央ロングテーブル",
       "x": 54,
       "y": 48,
       "width": 6,
-      "height": 8,
-      "seat_name": "中央ロングテーブル"
+      "height": 8
     },
     {
       "seat_id": "D1",
+      "seat_name": "長時間集中席",
       "x": 33,
       "y": 69,
       "width": 6,
-      "height": 8,
-      "seat_name": "長時間集中席"
+      "height": 8
     },
     {
       "seat_id": "D2",
+      "seat_name": "長時間集中席",
       "x": 41,
       "y": 69,
       "width": 6,
-      "height": 8,
-      "seat_name": "長時間集中席"
+      "height": 8
     },
     {
       "seat_id": "D3",
+      "seat_name": "長時間集中席",
       "x": 50,
       "y": 69,
       "width": 6,
-      "height": 8,
-      "seat_name": "長時間集中席"
+      "height": 8
     },
     {
       "seat_id": "D4",
+      "seat_name": "長時間集中席",
       "x": 57,
       "y": 69,
       "width": 6,
-      "height": 8,
-      "seat_name": "長時間集中席"
+      "height": 8
     },
     {
       "seat_id": "E1",
+      "seat_name": "月明かり個室席",
       "x": 76,
       "y": 49,
       "width": 7,
-      "height": 9,
-      "seat_name": "月明かり個室席"
+      "height": 9
     },
     {
       "seat_id": "E2",
+      "seat_name": "ソファ横休憩席",
       "x": 79,
       "y": 85,
       "width": 7,
-      "height": 9,
-      "seat_name": "ソファ横休憩席"
+      "height": 9
     }
   ]
 }

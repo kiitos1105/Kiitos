@@ -110,6 +110,24 @@ export default function DisplayPage() {
                 <WeatherCities compact />
               </div>
             </div>
+            <div className="glass-panel rounded-[2rem] p-5">
+              <p className="text-xs font-black uppercase tracking-normal text-amber-100/60">
+                Discord VC
+              </p>
+              <h3 className="mt-2 text-2xl font-black">🎤 VC参加者</h3>
+              <div className="mt-4 grid gap-2">
+                {["Mika / Cafe / unmuted", "Sora / Night / muted", "Aoi / Library / muted"].map(
+                  (item) => (
+                    <p
+                      className="rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm font-black text-stone-100/72"
+                      key={item}
+                    >
+                      {item}
+                    </p>
+                  )
+                )}
+              </div>
+            </div>
             <div className="glass-panel wood-panel relative overflow-hidden rounded-[2rem] p-6">
               <div className="relative z-10">
                 <p className="text-xs font-black uppercase tracking-normal text-amber-100/60">
@@ -134,7 +152,6 @@ function SceneBackground() {
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(255,218,166,0.22),transparent_30%),radial-gradient(circle_at_86%_16%,rgba(161,116,72,0.26),transparent_32%),linear-gradient(180deg,rgba(8,10,12,0.18),rgba(4,6,7,0.74))]" />
       <div className="wood-grain pointer-events-none fixed inset-x-0 bottom-0 h-[38vh] opacity-80" />
       <div className="lamp-glow pointer-events-none fixed right-[13%] top-[-8%] h-[42rem] w-[42rem] rounded-full" />
-      <div className="rain-layer pointer-events-none fixed inset-0" aria-hidden="true" />
       <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:96px_96px] opacity-20" />
     </>
   );
@@ -270,6 +287,7 @@ function ParticipantRow({ participant, now }: { participant: DisplayParticipant;
     Math.floor((now.getTime() - new Date(participant.startedAt).getTime()) / 1000),
     0
   );
+  const level = Math.max(1, 10 + participant.displayName.length);
 
   return (
     <div className="grid min-h-20 grid-cols-[48px_1fr_auto] items-center gap-3 rounded-[1.5rem] border border-white/10 bg-black/28 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
@@ -277,6 +295,7 @@ function ParticipantRow({ participant, now }: { participant: DisplayParticipant;
         {participant.displayName.slice(0, 1).toUpperCase()}
       </div>
       <div className="min-w-0">
+        <p className="text-[0.65rem] font-black uppercase text-amber-100/70">Lv.{level}</p>
         <strong className="block truncate text-lg font-black text-stone-50">
           {participant.displayName}
         </strong>

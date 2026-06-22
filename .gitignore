@@ -1,10 +1,17 @@
 node_modules
 .next
+.vercel
 out
 dist
 .env
 .env.local
+.env.*.local
 *.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage
 outputs
 work
 .DS_Store
