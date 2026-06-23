@@ -17,9 +17,8 @@ import {
   saveUserProfile,
   type BadgeNotification
 } from "@/lib/badges-client";
-import { isPremiumUiEnabled } from "@/lib/app-stage";
 import { addXp, getFocusTreeSummary, getLevelProgress } from "@/lib/level-client";
-import { getCurrentPlan, hasCustomRoomAccess, seedDemoCustomRooms } from "@/lib/premium-client";
+import { hasCustomRoomAccess, seedDemoCustomRooms } from "@/lib/premium-client";
 import { getRoomConfig } from "@/lib/room-config";
 import { formatDuration } from "@/lib/time";
 import { getRoomDetails } from "@/lib/work-room";
@@ -46,13 +45,10 @@ export default function LobbyPage() {
   const [focusPanelOpen, setFocusPanelOpen] = useState(true);
   const [navPanel, setNavPanel] = useState<string | null>(null);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [premium, setPremium] = useState(false);
   const [customRoomAccess, setCustomRoomAccessState] = useState(false);
   const [discordUser, setDiscordUser] = useState<DiscordUser | null>(null);
   const [badgeNotice, setBadgeNotice] = useState<BadgeNotification | null>(null);
   const [engagementProfile, setEngagementProfile] = useState(getEngagementProfile());
-  const [, setTick] = useState(0);
-  const now = new Date();
   const totalParticipants = rooms.reduce((sum, room) => sum + room.participants.length, 0);
   const totalFocusSeconds = rooms.reduce(
     (roomSum, room) =>
@@ -60,7 +56,6 @@ export default function LobbyPage() {
     0
   );
   const myFocusSeconds = 4 * 60 * 60 + 23 * 60;
-  const premiumUiEnabled = isPremiumUiEnabled();
   const sessionUser = useMemo(
     () =>
       session?.user?.id && session.user.name
@@ -75,18 +70,14 @@ export default function LobbyPage() {
 
   useEffect(() => {
     const saved = window.localStorage.getItem(FOCUS_PANEL_STORAGE_KEY);
-    const shouldCollapseForSmallScreen = window.matchMedia("(max-width: 760px)").matches;
-    setFocusPanelOpen(saved ? saved === "open" : !shouldCollapseForSmallScreen);
-    setPremium(getCurrentPlan() === "premium");
+    setFocusPanelOpen(saved ? saved === "open" : false);
     setCustomRoomAccessState(hasCustomRoomAccess());
     const savedDiscordUser = window.localStorage.getItem(DISCORD_USER_STORAGE_KEY);
     setDiscordUser(savedDiscordUser ? (JSON.parse(savedDiscordUser) as DiscordUser) : null);
     setEngagementProfile(getEngagementProfile());
     seedDemoCustomRooms();
 
-    const timer = window.setInterval(() => setTick((value) => value + 1), 1000);
     const syncPlan = () => {
-      setPremium(getCurrentPlan() === "premium");
       setCustomRoomAccessState(hasCustomRoomAccess());
     };
     const syncRooms = () => setRooms(getRoomDetails());
@@ -95,7 +86,6 @@ export default function LobbyPage() {
     window.addEventListener("kiitos:admin-users-change", syncRooms);
 
     return () => {
-      window.clearInterval(timer);
       window.removeEventListener("storage", syncPlan);
       window.removeEventListener("storage", syncRooms);
       window.removeEventListener("kiitos:admin-users-change", syncRooms);
@@ -170,13 +160,16 @@ export default function LobbyPage() {
       {badgeNotice ? <LobbyBadgeToast notice={badgeNotice} /> : null}
 
       <section className="relative z-10 mx-auto grid min-h-screen w-full max-w-[1680px] grid-rows-[auto_1fr_auto] gap-8 px-5 py-6 sm:px-7 lg:px-10 xl:px-12">
-        <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-          <Link className="justify-self-start" href="/lobby">
-            <span className="block text-[0.78rem] font-black uppercase tracking-[0.24em] text-sky-100/72">
-              Kiitos
-            </span>
-            <span className="hidden text-sm font-bold text-stone-100/55 sm:block">
-              Work Room
+        <header className="lobby-header">
+          <Link className="lobby-logo" href="/lobby">
+            <span className="lobby-logo-mark">K</span>
+            <span className="grid leading-none">
+              <span className="text-sm font-black text-stone-50 sm:text-base">
+                Kiitos Work Room
+              </span>
+              <span className="hidden text-[0.68rem] font-bold uppercase tracking-[0.2em] text-amber-100/45 sm:block">
+                Nordic focus lobby
+              </span>
             </span>
           </Link>
 
@@ -190,24 +183,10 @@ export default function LobbyPage() {
             >
               🔔
             </button>
-            {premiumUiEnabled && premium ? (
-              <Link
-                className="rounded-full border border-amber-100/30 bg-amber-100/14 px-4 py-2 text-sm font-black text-amber-100"
-                href="/pricing"
-              >
-                Premium
-              </Link>
-            ) : null}
-            {!premiumUiEnabled ? (
-              <span className="rounded-full border border-emerald-100/25 bg-emerald-100/12 px-4 py-2 text-sm font-black text-emerald-100">
-                Beta Tester
-              </span>
-            ) : null}
             <DiscordAccountButton
               loading={authStatus === "loading"}
               onLogin={loginWithDiscord}
               onLogout={logoutDiscord}
-              premium={premium}
               user={sessionUser ?? discordUser}
             />
           </div>
@@ -233,52 +212,6 @@ export default function LobbyPage() {
               今日の気分に合わせて、作業する場所を選ぼう。
             </p>
           </div>
-
-          <section className="lobby-intent-panel mx-auto grid w-full max-w-5xl gap-3 rounded-[1.75rem] border border-white/10 bg-black/26 p-3 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-2xl md:grid-cols-[1fr_1fr_auto]">
-            <label className="grid gap-2 text-xs font-black uppercase text-amber-100/60">
-              今日の目標
-              <select
-                className="h-12 rounded-2xl border border-white/10 bg-black/45 px-4 text-sm font-black text-stone-50 outline-none"
-                onChange={(event) => updateGoal(event.target.value as TodayGoal)}
-                value={engagementProfile.todayGoal}
-              >
-                {GOAL_OPTIONS.map((goal) => (
-                  <option key={goal} value={goal}>
-                    {goal}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="grid gap-2 text-xs font-black uppercase text-amber-100/60">
-              今日の一言
-              <input
-                className="h-12 rounded-2xl border border-white/10 bg-black/45 px-4 text-sm font-bold text-stone-50 outline-none"
-                onChange={(event) => updateMessage(event.target.value)}
-                value={engagementProfile.todayMessage}
-              />
-            </label>
-            <div className="grid h-full min-h-[4.75rem] content-center rounded-2xl border border-amber-100/20 bg-amber-100/10 px-4 py-3">
-              <p className="text-xs font-black uppercase text-amber-100/60">Streak</p>
-              <p className="mt-1 text-lg font-black text-amber-100">
-                🔥 {engagementProfile.streakDays}日連続
-              </p>
-            </div>
-          </section>
-
-          <aside className="lobby-status-cluster">
-            <StatusTile icon="♪" label="BGM" value="Lo-Fi Rain" sub="soft cafe mix" />
-            <StatusTile
-              icon="☁"
-              label="Weather"
-              value="Live Japan"
-              sub="5都市を自動更新"
-            />
-            <StatusTile icon="◷" label="Time" value={formatClock(now)} sub="Japan time" />
-          </aside>
-
-          <section className="lobby-weather-grid">
-            <WeatherCities compact minimal />
-          </section>
 
           <section className="lobby-room-grid">
             {rooms.map((room, index) => {
@@ -337,6 +270,43 @@ export default function LobbyPage() {
                 </Link>
               );
             })}
+          </section>
+
+          <section className="lobby-secondary-grid">
+            <section className="lobby-intent-panel grid gap-3 rounded-[1.75rem] border border-white/10 bg-black/26 p-3 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-2xl md:grid-cols-[1fr_1fr_auto]">
+              <label className="grid gap-2 text-xs font-black uppercase text-amber-100/60">
+                今日の目標
+                <select
+                  className="h-12 rounded-2xl border border-white/10 bg-black/45 px-4 text-sm font-black text-stone-50 outline-none"
+                  onChange={(event) => updateGoal(event.target.value as TodayGoal)}
+                  value={engagementProfile.todayGoal}
+                >
+                  {GOAL_OPTIONS.map((goal) => (
+                    <option key={goal} value={goal}>
+                      {goal}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-2 text-xs font-black uppercase text-amber-100/60">
+                今日の一言
+                <input
+                  className="h-12 rounded-2xl border border-white/10 bg-black/45 px-4 text-sm font-bold text-stone-50 outline-none"
+                  onChange={(event) => updateMessage(event.target.value)}
+                  value={engagementProfile.todayMessage}
+                />
+              </label>
+              <div className="grid h-full min-h-[4.75rem] content-center rounded-2xl border border-amber-100/20 bg-amber-100/10 px-4 py-3">
+                <p className="text-xs font-black uppercase text-amber-100/60">Streak</p>
+                <p className="mt-1 text-lg font-black text-amber-100">
+                  🔥 {engagementProfile.streakDays}日連続
+                </p>
+              </div>
+            </section>
+
+            <section className="lobby-weather-grid">
+              <WeatherCities compact minimal />
+            </section>
           </section>
 
           <MonthlyMvpPanel />
@@ -536,7 +506,7 @@ function CollapsibleFocusPanel({
         onClick={onToggle}
         type="button"
       >
-        ☕
+        Stats
       </button>
     );
   }
@@ -587,41 +557,13 @@ function FocusMetric({
   );
 }
 
-function StatusTile({
-  icon,
-  label,
-  value,
-  sub
-}: {
-  icon: string;
-  label: string;
-  value: string;
-  sub: string;
-}) {
-  return (
-    <div className="glass-panel rounded-[1.45rem] p-4">
-      <div className="flex items-center gap-3">
-        <span className="text-2xl text-amber-100">{icon}</span>
-        <div className="min-w-0">
-          <p className="text-sm font-black text-stone-100">{value}</p>
-          <p className="mt-1 truncate text-xs font-bold text-stone-300/50">
-            {label} · {sub}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function DiscordAccountButton({
   user,
-  premium,
   loading,
   onLogin,
   onLogout
 }: {
   user: DiscordUser | null;
-  premium: boolean;
   loading: boolean;
   onLogin: () => void;
   onLogout: () => void;
@@ -639,9 +581,13 @@ function DiscordAccountButton({
           className="h-9 w-9 rounded-full bg-cover bg-center"
           style={{ backgroundImage: `url(${user.avatarUrl})` }}
         />
-        <span className="hidden font-black sm:inline">{user.name}</span>
-        <span className="hidden text-xs font-black text-emerald-100 sm:inline">
-          {premium ? "Production Plan" : "Beta Tester"}
+        <span className="hidden min-w-0 text-left sm:grid">
+          <span className="max-w-[8.5rem] truncate text-sm font-black text-stone-50">
+            {user.name}
+          </span>
+          <span className="mt-0.5 text-[0.65rem] font-black uppercase tracking-[0.12em] text-emerald-100/78">
+            Beta Tester
+          </span>
         </span>
       </button>
     );
@@ -895,13 +841,4 @@ function LobbyBackground() {
       <div className="pointer-events-none fixed inset-0 bg-black/35" />
     </>
   );
-}
-
-function formatClock(date: Date) {
-  return new Intl.DateTimeFormat("ja-JP", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false
-  }).format(date);
 }

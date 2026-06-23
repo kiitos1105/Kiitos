@@ -11,8 +11,7 @@ const DEFAULT_ITEMS: HeaderNavigationItem[] = [
   { label: "Home", href: "/lobby", icon: "⌂" },
   { label: "Rooms", href: "/rooms", icon: "▦" },
   { label: "Friends", href: "/friends", icon: "◌" },
-  { label: "Stats", icon: "◷", panel: true },
-  { label: "Shop", icon: "◇", panel: true }
+  { label: "Stats", icon: "◷", panel: true }
 ];
 
 export function HeaderNavigation({

@@ -18,7 +18,7 @@ export function AdminChrome() {
   return (
     <>
       {isAdmin ? (
-        <div className="fixed left-1/2 top-3 z-50 -translate-x-1/2 rounded-full border border-amber-100/30 bg-black/58 px-5 py-2 text-sm font-black text-amber-100 shadow-2xl backdrop-blur-2xl">
+        <div className="fixed right-5 top-20 z-50 rounded-full border border-amber-100/24 bg-black/48 px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-amber-100/82 shadow-2xl backdrop-blur-2xl">
           Admin Mode
         </div>
       ) : null}

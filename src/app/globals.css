@@ -254,11 +254,49 @@ body::selection {
   background-attachment: fixed;
 }
 
+.lobby-header {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) auto minmax(12rem, 1fr);
+  align-items: center;
+  min-height: 4.5rem;
+  max-height: 4.5rem;
+  gap: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.5rem;
+  padding: 0.65rem 0.8rem 0.65rem 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 18px 60px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(26px);
+}
+
+.lobby-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.lobby-logo-mark {
+  display: grid;
+  width: 2.15rem;
+  height: 2.15rem;
+  place-items: center;
+  border: 1px solid rgba(253, 230, 138, 0.22);
+  border-radius: 0.9rem;
+  color: rgb(253, 230, 138);
+  background: linear-gradient(145deg, rgba(253, 230, 138, 0.18), rgba(255, 255, 255, 0.04));
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
 .lobby-nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.65rem;
+  gap: 0.2rem;
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 999px;
   padding: 0.25rem;
@@ -271,10 +309,10 @@ body::selection {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  min-width: 5.5rem;
+  min-width: 5rem;
   justify-content: center;
   border-radius: 999px;
-  padding: 0.65rem 0.85rem;
+  padding: 0.58rem 0.82rem;
   color: rgba(250, 250, 249, 0.72);
   font-size: 0.86rem;
   font-weight: 800;
@@ -292,7 +330,7 @@ body::selection {
 
 .focus-panel {
   position: absolute;
-  top: 5.2rem;
+  top: 6.25rem;
   left: 0;
   z-index: 20;
   display: grid;
@@ -318,15 +356,21 @@ body::selection {
 
 .focus-panel-collapsed {
   position: absolute;
-  top: 5.2rem;
+  top: 6.25rem;
   left: 0;
   z-index: 20;
   display: grid;
-  width: 3.5rem;
-  height: 3.5rem;
+  width: auto;
+  min-width: 4.4rem;
+  height: 2.65rem;
   place-items: center;
-  border-radius: 1.25rem;
-  font-size: 1.35rem;
+  border-radius: 999px;
+  padding: 0 1rem;
+  color: rgba(255, 251, 235, 0.78);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 @media (min-width: 1024px) and (max-width: 1420px) {
@@ -334,36 +378,10 @@ body::selection {
     width: 16rem;
     padding: 1rem;
   }
-
-  .lobby-status-cluster {
-    position: static;
-    width: min(42rem, 100%);
-    margin: 0 auto;
-  }
-}
-
-.lobby-status-cluster {
-  position: absolute;
-  right: 0;
-  top: 5.1rem;
-  z-index: 15;
-  display: grid;
-  width: min(31.5rem, 38vw);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.lobby-status-cluster > .glass-panel {
-  display: grid;
-  min-height: 5.4rem;
-  align-items: center;
-  border-radius: 1.35rem;
-  padding: 1rem;
 }
 
 .lobby-weather-grid {
-  width: min(45rem, 100%);
-  margin: -0.4rem auto 0;
+  width: min(40rem, 100%);
 }
 
 .weather-cities {
@@ -398,8 +416,8 @@ body::selection {
 
 .lobby-room-grid {
   display: grid;
-  gap: 1.45rem;
-  margin-top: 0.65rem;
+  gap: 1.65rem;
+  margin-top: 0.9rem;
 }
 
 .lobby-room-card {
@@ -426,16 +444,24 @@ body::selection {
   min-height: 5.4rem;
 }
 
+.lobby-secondary-grid {
+  display: grid;
+  width: min(72rem, 100%);
+  margin: 0.4rem auto 0;
+  gap: 1rem;
+}
+
 .live-preview-dock {
   position: fixed;
   z-index: 42;
   display: grid;
-  width: 15rem;
-  grid-template-columns: 5.2rem 1fr;
+  width: 12.5rem;
+  grid-template-columns: 4.4rem 1fr;
   gap: 0.75rem;
   align-items: center;
   border-radius: 1.45rem;
-  padding: 0.72rem;
+  padding: 0.62rem;
+  opacity: 0.9;
   cursor: grab;
   user-select: none;
   touch-action: none;
@@ -491,20 +517,24 @@ body::selection {
 
   .lobby-room-card-top {
     grid-column: span 2 / span 2;
-    min-height: 19rem;
+    min-height: 20rem;
   }
 
   .lobby-room-card-bottom {
     grid-column: span 3 / span 3;
-    min-height: 17.2rem;
+    min-height: 18rem;
+  }
+
+  .lobby-secondary-grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(23rem, 0.85fr);
+    align-items: stretch;
   }
 }
 
 @media (max-width: 1023px) {
-  .lobby-status-cluster {
-    position: static;
-    width: 100%;
-    grid-template-columns: 1fr;
+  .lobby-header {
+    grid-template-columns: minmax(10rem, 1fr) auto minmax(10rem, 1fr);
+    max-height: none;
   }
 
   .lobby-weather-grid {
@@ -514,7 +544,7 @@ body::selection {
   .focus-panel,
   .focus-panel-collapsed {
     position: fixed;
-    top: 5.25rem;
+    top: 5.75rem;
     left: 1rem;
   }
 
@@ -528,6 +558,17 @@ body::selection {
 }
 
 @media (max-width: 760px) {
+  .lobby-header {
+    grid-template-columns: 1fr auto;
+    min-height: 4rem;
+    padding: 0.55rem;
+  }
+
+  .lobby-logo-mark {
+    width: 2rem;
+    height: 2rem;
+  }
+
   .lobby-nav {
     position: fixed;
     right: 1rem;
@@ -563,10 +604,6 @@ body::selection {
     width: calc(100vw - 2rem);
   }
 
-  .lobby-status-cluster {
-    grid-template-columns: 1fr;
-  }
-
   .weather-cities,
   .weather-cities-compact {
     grid-template-columns: repeat(5, minmax(5.7rem, 1fr));
@@ -584,8 +621,12 @@ body::selection {
   .live-preview-dock {
     right: 1rem !important;
     bottom: 6.25rem !important;
-    width: 13.5rem;
-    grid-template-columns: 4.6rem 1fr;
+    width: 10.75rem;
+    grid-template-columns: 3.8rem 1fr;
+  }
+
+  .live-preview-screen {
+    height: 2.85rem;
   }
 
   .lobby-footer-nav {
